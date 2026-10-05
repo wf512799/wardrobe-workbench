@@ -717,6 +717,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
 .auth-sw{margin-top:12px;text-align:center;font-size:13px;color:var(--muted)}
 .linkbtn{border:0;background:none;color:var(--pri);font-size:13px;font-family:inherit;cursor:pointer;padding:0 2px;min-height:32px}
 .auth-tip{margin:10px 0 0;min-height:18px;font-size:12.5px;color:var(--danger);text-align:center}
+.auth-note{margin:0 0 12px;font-size:12.5px;line-height:1.6;color:var(--ink-2);background:var(--pri-l);border-radius:var(--r-1);padding:9px 11px}
 .sync-tip{margin-top:10px;padding:8px 11px;border-radius:9px;font-size:12.5px;line-height:1.6;border:1px solid transparent;text-align:left}
 .sync-tip.ok{background:#EAF3DE;color:#3B6D11;border-color:#C0DD97}
 .sync-tip.warn{background:#FCEBEB;color:#A32D2D;border-color:#F7C1C1}
@@ -1125,6 +1126,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       </div>
       <button class="btn primary" id="auLogin" data-page-node-id="vIXMTTv60E8cbAy1tmFjKw">登录</button>
       <div class="auth-sw" data-page-node-id="oKq4zvmnDvbajwBdf9jVSR">还没有账号？<button class="linkbtn" id="auGoReg" data-page-node-id="yzEJoFx6txQQOT2iGFgOkw">注册设计师账号</button></div>
+      <div class="auth-sw"><button class="linkbtn" id="auGoReset">忘记密码？</button></div>
     </div>
 
     <div id="authReg" class="hide" data-page-node-id="ZGh7nmiCWUBau4R4BJQRf2">
@@ -1146,6 +1148,28 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       </div>
       <button class="btn primary" id="ruReg" data-page-node-id="st31m4yR7FFZStUKjGw4mQ">注册并登录</button>
       <div class="auth-sw" data-page-node-id="tL7xT17a5xmN2uBNqqykof">已有账号？<button class="linkbtn" id="auGoLogin" data-page-node-id="vWNFKIJG2GfAN4v5DdLsPY">返回登录</button></div>
+    </div>
+
+    <div id="authReset" class="hide">
+      <p class="auth-note" id="resetNote">密码是加密存的，谁都看不到原密码，只能重设一个。找管理员要「重置码」就能自己改。</p>
+      <div class="field">
+        <label for="rpUser">用户名</label>
+        <input id="rpUser" type="text" autocomplete="username" placeholder="要重设哪个账号">
+      </div>
+      <div class="field">
+        <label for="rpCode">重置码</label>
+        <input id="rpCode" type="text" autocomplete="off" placeholder="管理员掌握的重置码">
+      </div>
+      <div class="field">
+        <label for="rpPwd">新密码</label>
+        <input id="rpPwd" type="password" autocomplete="new-password" placeholder="6 位以上">
+      </div>
+      <div class="field">
+        <label for="rpPwd2">确认新密码</label>
+        <input id="rpPwd2" type="password" autocomplete="new-password" placeholder="再输一次">
+      </div>
+      <button class="btn primary" id="rpGo">重设密码</button>
+      <div class="auth-sw">想起来了？<button class="linkbtn" id="rpBack">返回登录</button></div>
     </div>
 
     <p class="auth-tip" id="authTip" data-page-node-id="o0uIbv5cp8fGjUytKnA9za"></p>
@@ -1989,6 +2013,12 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     }
     return h.toString(36);
   }
+  /**
+   * 「忘记密码」用的管理员重置码。
+   * 密码只存加盐哈希，谁都看不到原密码，所以找回不了、只能重设一个 ——
+   * 拿到这个码就能给任意账号重设密码。想换一个码，改这一行即可。
+   */
+  var RESET_CODE = '666666';
   function makeSalt() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 
   function lsGetAccounts() {
@@ -2122,6 +2152,32 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     });
   }
 
+  /** 忘记密码：用户名 + 管理员重置码 + 新密码 → 直接重设（原密码不可见，只能换新的） */
+  function doResetPwd() {
+    var u = normUser($('#rpUser') && $('#rpUser').value);
+    var code = String(($('#rpCode') && $('#rpCode').value) || '').trim();
+    var p = $('#rpPwd') ? $('#rpPwd').value : '';
+    var p2 = $('#rpPwd2') ? $('#rpPwd2').value : '';
+    if (!u) { authErr('请填要重设的用户名'); return; }
+    if (code !== RESET_CODE) { authErr('重置码不对，找管理员要'); return; }
+    if (!findAccount(u)) { authErr('这个用户名还没注册'); return; }
+    if (p.length < 6) { authErr('新密码至少 6 位'); return; }
+    if (p !== p2) { authErr('两次输入的新密码不一样'); return; }
+    var salt = makeSalt();
+    saveAccounts(getAccounts().map(function (x) {
+      if (normUser(x.u) === u) { x.salt = salt; x.h = pwdHash(p, salt); }
+      return x;
+    })).then(function (ok) {
+      authErr('');
+      toast(ok ? '密码已重设：用新密码登录吧' : '密码已改，但没同步到云端 —— 换电脑会登录不上');
+      ['#rpCode', '#rpPwd', '#rpPwd2'].forEach(function (s) { var n = $(s); if (n) n.value = ''; });
+      var rp = $('#authReset'); if (rp) rp.classList.add('hide');
+      $('#authLogin').classList.remove('hide');
+      var pu = $('#auUser'); if (pu) pu.value = u;
+      var pp = $('#auPwd'); if (pp) pp.value = '';
+    });
+  }
+
   function doLogout() {
     askConfirm('退出后要重新登录才能看订单，确定吗？', '退出', function () {
       lsSetSession(null);
@@ -2208,6 +2264,25 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var gl = $('#auGoLogin');
     if (gl) gl.addEventListener('click', function () {
       $('#authReg').classList.add('hide'); $('#authLogin').classList.remove('hide'); authErr('');
+    });
+    // 忘记密码：切到重设面板 / 返回登录
+    var greset = $('#auGoReset');
+    if (greset) greset.addEventListener('click', function () {
+      var rp = $('#authReset');
+      if (!rp) return;
+      $('#authLogin').classList.add('hide'); $('#authReg').classList.add('hide');
+      rp.classList.remove('hide'); authErr('');
+      var u = $('#auUser'); if (u && normUser(u.value)) $('#rpUser').value = normUser(u.value);
+    });
+    var rback = $('#rpBack');
+    if (rback) rback.addEventListener('click', function () {
+      var rp = $('#authReset'); if (rp) rp.classList.add('hide');
+      $('#authLogin').classList.remove('hide'); authErr('');
+    });
+    var rgo = $('#rpGo'); if (rgo) rgo.addEventListener('click', doResetPwd);
+    ['#rpCode', '#rpPwd', '#rpPwd2'].forEach(function (s) {
+      var n = $(s);
+      if (n) n.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doResetPwd(); } });
     });
     ['#auUser', '#auPwd'].forEach(function (s) {
       var n = $(s);
