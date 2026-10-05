@@ -1194,9 +1194,14 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   // 云端「工作台设置」表（只存标题等页面自定义文案，不存订单）：
   var SET_DB_ID = 'zJgP7lBJpKEFlp8IDbNyeO';
   // 注意：SDK 规范要求调用处 databaseId 必须写字面量，故下面几处直接用字符串而非 SET_DB_ID。
+  // 第三方托管（GitHub Pages 等）没有 CloudBase Web SDK，也加不了安全域名，
+  // 所以读写统一走一个自托管的 HTTP 云函数（背后是 CloudBase PostgreSQL）。
+  // 留空 = 不启用，退回 localStorage 单机模式。
+  var API_BASE = 'https://hms-d0g8ch3tk2a7caf08-1303254235.ap-shanghai.app.tcloudbase.com/wardrobe-api';
+  var API_TOKEN = '';
 
   var sdk = (window.__SMART_PAGE__ && window.__SMART_PAGE__.database) ? window.__SMART_PAGE__.database : null;
-  var HAS_DB = !!sdk;
+  var HAS_DB = !!sdk || !!API_BASE;
 
   /* ---------------- 唯一数据源 ---------------- */
   var state = {
@@ -1465,7 +1470,86 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       { _id: newId(), '客户姓名': '示例·孙女士', '阶段': '已结清', '联系电话': '13400006666', '小区地址': '示例·江畔人家 7-1503', '金额': 22600, '设计师': '李慧', '区域销售经理': '华南二区', '提成': 1600, '补件扣款': 300, '整改扣款': 180, '接单日期': '2025-09-10', '跟进日期': '2025-11-20', '备注': '示例数据：全屋柜类完成，尾款已收清（去年的单）', '示例数据': true }
     ];
   }
-  var db = HAS_DB ? sdk : LocalStore();
+  /* ---------------- 远端数据源（HTTP 云函数 → PostgreSQL） ----------------
+     接口跟 LocalStore / 线上 SDK 完全对齐，页面其余代码不用改：
+     query / addRecord / updateRecord / deleteRecord / getSchema。 */
+  function RemoteStore() {
+    var stageOpts = STAGES.map(function (s, i) { return { id: 'cloud_stage_' + i, text: s.name }; });
+    function unwrap(v) {
+      if (!v || typeof v !== 'object') return v;
+      var ks = Object.keys(v);
+      if (!ks.length) return v;
+      var type = ks[0], val = v[type];
+      if (type === 'select') {
+        if (!val) return '';
+        for (var i = 0; i < stageOpts.length; i++) if (stageOpts[i].id === val) return stageOpts[i].text;
+        return val;
+      }
+      return val;
+    }
+    /** 写入前把 { 字段: {text:…} } 拍平成 { 字段: 值 }，云端只存纯数据 */
+    function flat(props) {
+      var out = {};
+      Object.keys(props || {}).forEach(function (k) { out[k] = unwrap(props[k]); });
+      return out;
+    }
+    function call(payload) {
+      if (API_TOKEN) payload.token = API_TOKEN;
+      return fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (j) {
+        if (!j || j.ok === false) throw new Error((j && j.error) || '云端接口返回失败');
+        return j;
+      });
+    }
+    return {
+      getSchema: function () {
+        return Promise.resolve({
+          id: DATABASE_ID, title: '全屋定制订单跟进',
+          properties: [
+            { id: 'p1', name: '客户姓名', type: 'text' },
+            { id: 'p2', name: '阶段', type: 'select', config: { options: stageOpts } },
+            { id: 'p3', name: '联系电话', type: 'text' },
+            { id: 'p4', name: '小区地址', type: 'text' },
+            { id: 'p5', name: '金额', type: 'currency', config: {} },
+            { id: 'p6', name: '接单日期', type: 'date' },
+            { id: 'p7', name: '跟进日期', type: 'date' },
+            { id: 'p8', name: '备注', type: 'text' },
+            { id: 'p9', name: '示例数据', type: 'checkbox' },
+            { id: 'p10', name: '区域销售经理', type: 'text' },
+            { id: 'p14', name: '设计师', type: 'text' },
+            { id: 'p11', name: '提成', type: 'currency', config: {} },
+            { id: 'p12', name: '补件扣款', type: 'currency', config: {} },
+            { id: 'p13', name: '整改扣款', type: 'currency', config: {} }
+          ]
+        });
+      },
+      query: function (p) {
+        return call({ t: p.databaseId, op: 'query', pageSize: p.pageSize || 200, startCursor: p.startCursor || 0 })
+          .then(function (j) {
+            return { results: j.results || [], nextCursor: j.nextCursor, hasMore: !!j.hasMore };
+          });
+      },
+      addRecord: function (p) {
+        return call({ t: p.databaseId, op: 'add', properties: flat(p.properties) })
+          .then(function (j) { return { id: j.id }; });
+      },
+      updateRecord: function (p) {
+        return call({ t: p.databaseId, op: 'update', recordId: p.recordId, properties: flat(p.properties) })
+          .then(function (j) { return { id: j.id || p.recordId }; });
+      },
+      deleteRecord: function (p) {
+        return call({ t: p.databaseId, op: 'delete', recordId: p.recordId }).then(function () { return {}; });
+      },
+      onUpdated: function () {}
+    };
+  }
+  var db = sdk || (API_BASE ? RemoteStore() : LocalStore());
 
   /* ---------------- 数据层 ---------------- */
   function readRecords(cursor, acc, guard) {
@@ -1495,6 +1579,28 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         setSync('offline');
         toast('数据加载失败，请刷新重试');
       });
+  }
+  /**
+   * 第一次接上云端时，把这台电脑上已经有的订单搬上去，免得「换设备后一片空白」。
+   * 只搬一次：云端已经有单就说明别人（或别的设备）先传过了，绝不再覆盖。
+   */
+  function migrateLocalToCloud() {
+    if (!API_BASE || sdk) return Promise.resolve();   // 只有「第三方托管 + 云函数」这条链路才需要搬
+    var local = [];
+    try { local = JSON.parse(window.localStorage.getItem(LS_KEY) || '[]') || []; } catch (e) { local = []; }
+    if (!local.length) return Promise.resolve();
+    return db.query({ databaseId: DATABASE_ID, pageSize: 200 })
+      .then(function (r) {
+        if (((r && r.results) || []).length) return;
+        var chain = Promise.resolve();
+        local.forEach(function (row) {
+          chain = chain.then(function () {
+            return db.addRecord({ databaseId: DATABASE_ID, properties: row }).catch(function () {});
+          });
+        });
+        return chain.then(function () { toast('本机 ' + local.length + ' 条订单已上传到云端'); });
+      })
+      .catch(function (err) { console.error('[order] 本地数据上云失败:', err); });
   }
   function setSync(mode) {
     var badge = $('#syncBadge'), txt = $('#syncText');
@@ -3837,6 +3943,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         SCHEMA_OPTIONS['阶段'] = STAGES.map(function (s) { return { id: s.name, text: s.name }; });
         renderSelectOptions();
       })
+      .then(migrateLocalToCloud)
       .then(loadData)
       .then(function () {
         bind($('#todayLabel')).textContent = '今天 ' + prettyDate(todayISO()) + ' · 共 ' + state.rows.length + ' 单';
