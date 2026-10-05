@@ -1,0 +1,3900 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="kDn4jSYLDxwLUZpPBXqdRS">
+<head data-page-node-id="3jgFbBiPDMNk9BsGumkCTL">
+<meta charset="UTF-8" data-page-node-id="YABDlAAbENDNVYKNqDicWP">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" data-page-node-id="SjPTYKcFayCFnkKAqDRhaQ">
+<title>定制衣柜订单跟进台</title>
+<meta name="apple-mobile-web-app-capable" content="yes" data-page-node-id="k5StScNtR148IHMMnkHUoo">
+<meta name="apple-mobile-web-app-title" content="订单跟进" data-page-node-id="pAlhpsXdRYfAJtyiquhqIR">
+<meta name="theme-color" content="#B4763A" data-page-node-id="oCHdTr3bbyJLcSgCPB6wV3">
+<style>
+:root{
+  --bg:#F6F3EF; --card:#FFFFFF; --line:#ECE6DE; --text:#241F1A; --muted:#8B8073;
+  --pri:#B4763A; --pri-d:#96592A; --pri-l:#F6EDE2; --danger:#D64545; --danger-l:#FDECEC;
+  --ok:#3E9E74; --radius:14px; --shadow:0 2px 10px rgba(60,45,30,.06);
+  /* 视觉精修新增：只加不改，旧变量取值全部保留，保证历史规则不受影响 */
+  --ink:#221C16; --ink-2:#5C5248; --ink-3:#7B7060;
+  --pri-2:#D9653F; --line-2:rgba(60,42,26,.08);
+  --r-1:10px; --r-2:12px; --r-3:14px; --r-4:18px;
+  --sh-1:0 1px 2px rgba(58,42,26,.04), 0 2px 6px rgba(58,42,26,.04);
+  --sh-2:0 2px 6px rgba(58,42,26,.06), 0 12px 28px rgba(58,42,26,.07);
+  --sh-3:0 18px 44px rgba(40,28,16,.16);
+  --ring:0 0 0 3px rgba(180,118,58,.22);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.55; padding-bottom:calc(24px + env(safe-area-inset-bottom));
+}
+h1,h2,h3,p,ul,li{margin:0;padding:0}
+ul{list-style:none}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px}
+.hide{display:none !important}
+mark{background:#FFE9A8;color:inherit;border-radius:3px;padding:0 1px}
+
+/* ---------- 顶部 ---------- */
+.top{
+  position:sticky; top:0; z-index:30; background:rgba(246,243,239,.92);
+  backdrop-filter:saturate(180%) blur(8px); border-bottom:1px solid var(--line);
+  padding:12px 16px calc(10px);
+  /* 抬头 + 右上按钮整体水平居中 */
+  display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;
+}
+.top-l{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--pri);display:flex;align-items:center;justify-content:center;flex:none}
+.logo svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.top h1{font-size:17px;font-weight:700;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 顶部标题：点一下就能改成自己的店名 / 设计师名字 */
+.edit-title{cursor:text;border-radius:8px;padding:2px 7px;margin:-2px -7px;transition:background .15s,box-shadow .15s;outline:none}
+.edit-title:hover{background:var(--pri-l)}
+.edit-title:hover::after{content:'✎';float:right;margin-left:8px;font-size:12px;font-weight:500;color:var(--muted);opacity:.8}
+.edit-title.editing{background:#fff;box-shadow:0 0 0 2px var(--pri);cursor:default}
+.edit-title:focus{outline:none}
+.top .sub{font-size:12px;color:var(--muted)}
+.top-r{display:flex;align-items:center;gap:8px;flex:none}
+/* 顶栏身份切换器：老板看全部 / 设计师只看自己 */
+.owner-wrap{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;min-height:40px;padding:0 9px;max-width:min(48vw,270px)}
+.owner-wrap .ow-ico{width:18px;height:18px;flex:none;color:var(--pri)}
+.owner-wrap .ow-ico svg{width:100%;height:100%;display:block}
+.owner-wrap select{border:0;background:transparent;font-size:14px;color:var(--text);max-width:130px;min-height:36px;font-family:inherit}
+.owner-wrap .ow-hint{font-size:12px;color:var(--muted);white-space:nowrap}
+.owner-wrap.is-person{border-color:var(--pri);background:var(--pri-l)}
+.owner-wrap.is-person .ow-ico,.owner-wrap.is-person select{color:var(--pri-d);font-weight:500}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.sync .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+.sync.off .dot{background:#C9BFB0}
+.btn{
+  min-height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#fff;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;color:var(--text);
+}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.btn.ghost{background:#fff}
+.btn.danger{color:var(--danger);border-color:#F0D3D3;background:#fff}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px;border-radius:8px}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 布局 ---------- */
+main{
+  max-width:1640px;margin:0 auto;padding:14px 14px 8px;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;
+}
+.col-main{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0;align-content:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.card-h h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+.card-h h2 svg{width:17px;height:17px;stroke:var(--pri);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.badge{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.badge.hot{color:#fff;background:var(--danger);border-color:var(--danger)}
+.hintline{font-size:12.5px;color:var(--muted);margin:-4px 0 8px}
+
+/* ---------- 今天要处理 ---------- */
+.today-card{border-color:#F0DCCB;box-shadow:0 3px 14px rgba(180,118,58,.10)}
+.today-list{display:grid;gap:9px}
+.t-item{
+  display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:#FFFDFB;
+}
+.t-item.over{border-color:#F2C9C9;background:var(--danger-l)}
+.t-item.soon{border-color:#F0DFC6;background:#FFFBF4}
+.t-item.focus{box-shadow:0 0 0 3px rgba(180,118,58,.28)}
+.t-main{flex:1;min-width:0}
+.t-name{font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.t-name .jump{cursor:pointer}
+.t-sub{font-size:12.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-date{font-size:12px;color:var(--muted);white-space:nowrap}
+.t-item.over .t-date{color:var(--danger);font-weight:600}
+.t-acts{display:flex;gap:6px;flex:none}
+.tag{font-size:11.5px;padding:1px 8px;border-radius:999px;color:#fff;font-weight:600;white-space:nowrap}
+
+/* ---------- 筛选：工具行 ---------- */
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.search{flex:1;min-width:150px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:0 10px;min-height:40px}
+.search svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2}
+.search input{flex:1;border:none;outline:none;background:transparent;min-height:38px;font-size:16px;width:100%}
+.sel{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;min-height:40px;padding:0 9px}
+.sel > span{font-size:12.5px;color:var(--muted)}
+.sel select{border:none;outline:none;background:transparent;font-size:14px;min-height:38px;color:var(--text);max-width:120px}
+.btn.reset{border-color:#F0DCCB;background:var(--pri-l);color:var(--pri-d);font-weight:600}
+
+/* ---------- 筛选：条件胶囊 ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:10px}
+.chips:empty{display:none}
+.chips .c-label{font-size:12px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;background:var(--pri-l);border:1px solid #EBD9C3;color:var(--pri-d);border-radius:999px;padding:4px 6px 4px 10px}
+.chip b{font-weight:700}
+.chip .x{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pri-d)}
+.chip .x svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+
+/* ---------- 阶段筛选 ---------- */
+.tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:none;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:#5C5248;white-space:nowrap;
+}
+.tab .n{font-size:12px;color:var(--muted)}
+.tab.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.tab.on .n{color:rgba(255,255,255,.85)}
+.tab .pip{width:8px;height:8px;border-radius:50%;display:inline-block}
+.tab.on .pip{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.tab.hit{outline:2px solid rgba(180,118,58,.35);outline-offset:1px}
+/* 末尾「未下单」是合并口径，用左分隔线跟真实阶段隔开 */
+.tab-pre{margin-left:8px;border-style:dashed;background:#FBF8F4}
+.tab-pre .n{color:var(--pri-d);font-weight:600}
+
+/* ---------- 订单卡 ---------- */
+.order-list{display:grid;gap:10px}
+.o-card{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff}
+.o-card.focus{border-color:var(--pri);box-shadow:0 0 0 2px rgba(180,118,58,.22)}
+.o-card.flash{animation:flash 1.5s ease}
+@keyframes flash{0%,100%{background:#fff}20%,60%{background:#FFF3E3}}
+.o-top{display:flex;align-items:flex-start;gap:8px;justify-content:space-between}
+.o-name{font-size:15.5px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.o-name .jump{cursor:pointer}
+.o-amt{font-weight:700;color:var(--pri-d);white-space:nowrap;font-size:15px}
+.o-info{font-size:13px;color:#5C5248;margin-top:5px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.o-info span{display:inline-flex;align-items:center;gap:5px}
+.o-info svg{width:13px;height:13px;stroke:var(--muted);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.o-money{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:6px}
+.o-comm{font-size:12px;color:#5C5248;background:var(--bg);border-radius:8px;padding:3px 8px}
+.o-remark{font-size:12.5px;color:var(--muted);margin-top:5px;background:var(--bg);border-radius:8px;padding:5px 8px;word-break:break-all}
+.o-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;flex-wrap:wrap}
+.o-step{display:flex;gap:6px;flex-wrap:wrap}
+.flowline{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
+.flowline i{width:22px;height:4px;border-radius:2px;background:var(--line);display:block}
+.flowline i.done{background:var(--pri)}
+.flowline i.cur{outline:2px solid var(--pri);outline-offset:2px}
+.flowline em{font-style:normal;font-size:11.5px;color:var(--muted);margin-left:2px}
+.o-detail{margin-top:9px;border-top:1px dashed var(--line);padding-top:9px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.o-detail .d-row{font-size:12.5px;color:#5C5248;display:flex;gap:6px}
+.o-detail .d-row b{color:var(--muted);font-weight:600;flex:none}
+.o-detail .d-full{grid-column:1/-1}
+.o-detail .d-acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+
+/* ---------- 统计 ---------- */
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px}
+.seg button{font-size:12.5px;padding:5px 12px;border-radius:999px;color:#5C5248;min-height:28px}
+.seg button.on{background:#fff;color:var(--pri-d);font-weight:700;box-shadow:0 1px 3px rgba(60,45,30,.08)}
+/* KPI 卡片：默认两列（手机 / 两侧窄栏） */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
+/* 月度表在窄栏里走三列规则，宽屏也不拉长 */
+@media (min-width:1080px){
+  .col-main .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+/* 「数据统计」只有 3 张 KPI，用 3 列避免右边空两格 */
+.kpis.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:10px 11px;text-align:left;transition:.15s}
+.kpi:hover{border-color:var(--pri);background:#fff}
+.kpi.on{border-color:var(--pri);background:#fff;box-shadow:0 0 0 2px rgba(180,118,58,.18)}
+.kpi b{display:block;font-size:20px;line-height:1.25;font-weight:700}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi em{display:block;font-style:normal;font-size:11px;color:var(--pri-d);margin-top:2px;min-height:14px}
+.kpi.wide{grid-column:span 2}
+.chart-wrap{overflow-x:auto}
+.chart-wrap svg{cursor:pointer;display:block;margin:0 auto}
+/* 窄栏（右栏 / 手机）里的阶段横条清单 */
+.s-row{display:flex;align-items:center;gap:8px;padding:5px 3px;border-radius:8px;transition:background .15s}
+.s-row:hover{background:var(--pri-l)}
+.s-row.on{background:var(--pri-l);box-shadow:0 0 0 1px #EBD9C3}
+.s-n{width:52px;flex:none;font-size:12.5px;color:#5C5248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-track{flex:1;min-width:0;height:9px;background:#F1ECE5;border-radius:999px;overflow:hidden}
+.s-fill{display:block;height:100%;border-radius:999px;transition:width .3s ease}
+.s-v{width:24px;flex:none;text-align:right;font-size:13px;font-weight:700}
+
+/* ---------- 月度统计（每个阶段页都在，口径与「数据统计」一致；只出数字 + 明细表，不出柱状图） ---------- */
+.m-table{margin-top:2px}
+/* 月度明细框：只固定露 3 个月，多出来的月份在这个框里下滑，不把整页拉长 */
+.m-scroll{overflow-y:auto;overscroll-behavior:contain}
+.m-scroll::-webkit-scrollbar{width:5px}
+.m-scroll::-webkit-scrollbar-track{background:transparent}
+.m-scroll::-webkit-scrollbar-thumb{background:#E2D8CA;border-radius:3px}
+.m-more{display:none;margin-top:5px;text-align:center;font-size:11px;color:var(--muted)}
+.m-more.on{display:block}
+
+/* 月度柱体：净额一排、扣款一排 —— 同一排里横着比高低，
+   净额排看哪个月赚得最多，扣款排看哪个月扣得最多（每排各用自己的高度尺）。
+   横轴按「接单年」分段：一年里的月份放在一起比，年与年之间用竖虚线 + 年份隔开，
+   这样 2025 的 06月 不会跟 2026 的 06月 混在同一根柱子上。 */
+.mb-wrap{margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
+.mb-gap{
+  flex:0 0 20px;min-width:0;align-self:stretch;
+  border-left:1px dashed var(--line);margin:0 2px;
+}
+.mb-gf{
+  flex:0 0 20px;min-width:0;text-align:center;font-size:9px;
+  line-height:11px;color:var(--muted);white-space:nowrap;overflow:hidden;
+}
+.mb-line{display:flex;align-items:stretch;gap:4px}
+.mb-line+.mb-line{margin-top:3px}
+.mb-tag{
+  flex:0 0 26px;display:flex;align-items:flex-end;justify-content:center;
+  font-size:9.5px;line-height:1.1;color:var(--muted);padding-bottom:1px;
+}
+.mb-axis{
+  flex:1;min-width:0;display:flex;align-items:flex-end;gap:3px;
+  height:72px;padding:0 3px;border-bottom:1px solid var(--line);
+}
+.mb-slot{
+  flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;
+  justify-content:center;cursor:pointer;border-radius:4px;
+}
+.mb-slot:hover{background:var(--pri-l)}
+.mb-slot.on{background:var(--pri-l);box-shadow:0 0 0 1px #EBD9C3}
+.mb-bar{
+  width:60%;min-width:5px;max-width:20px;height:0;min-height:3px;
+  border-radius:3px 3px 0 0;display:block;background:var(--pri-d);
+}
+.mb-line.net .mb-bar{background:linear-gradient(180deg,#C98A4B,#96592A)}
+.mb-line.ded .mb-bar{background:#D64545}
+.mb-bar.peak{outline:1.5px solid rgba(92,82,72,.45);outline-offset:1px}
+.mb-foot{display:flex;align-items:center;gap:3px;margin-top:2px;padding:0 30px}
+.mb-slotf{flex:1;min-width:0;text-align:center;font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mb-empty{font-size:11px;color:var(--muted);text-align:center;width:100%;line-height:72px}
+/* 每行 = 接单月 + 5 个「标签 / 数值」单元格；表头与数据用同一套结构，怎么折行都上下对齐 */
+.m-row{
+  display:flex;align-items:stretch;gap:6px;
+  padding:9px 4px;border-bottom:1px solid var(--line);font-size:13px;
+}
+.m-row.pick{cursor:pointer;border-radius:8px}
+.m-row.pick:hover{background:var(--pri-l)}
+.m-row.on{background:var(--pri-l);box-shadow:0 0 0 1px #EBD9C3}
+.m-c{
+  flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 5px;border-radius:6px;
+}
+.m-c i{font-style:normal;font-size:11px;color:var(--muted);font-weight:600}
+.m-c b{font-size:13.5px;font-weight:700;letter-spacing:.2px}
+.m-c.c-mo{flex:none;min-width:64px;color:var(--pri-d);font-weight:700;justify-content:center}
+.m-c.c-mo i{display:none}
+/* 订单总数 / 净额两块给浅底，关键数字一眼能看到 */
+.m-c.c1,.m-c.c5{background:#FAF6F0}
+.empty{text-align:center;color:var(--muted);font-size:13.5px;padding:16px 8px}
+
+/* ---------- 左右两条统计窄栏：宽屏各占一列（都是 300px），页面下滑时钉在原地不动 ---------- */
+@media (min-width:1240px){
+  /* 左栏「月度统计」加宽到 380px（月度明细表能摊成三列，数字不再挤成竖条）
+     中栏「今天 + 订单」吃掉剩下的，右栏「数据统计」维持 300px */
+  main{grid-template-columns:380px minmax(0,1fr) 300px}
+  main > *{grid-row:1}
+  #monthAside{grid-column:1}
+  .col-main{grid-column:2}
+  #statAside{grid-column:3}
+  .col-side{
+    position:sticky; top:74px; align-self:start;
+    max-height:calc(100vh - 86px); overflow-y:auto;
+    padding-right:2px;
+  }
+  .col-side::-webkit-scrollbar{width:5px}
+  .col-side::-webkit-scrollbar-track{background:transparent}
+  .col-side::-webkit-scrollbar-thumb{background:#E2D8CA;border-radius:3px}
+  /* 全部按小尺寸压一遍，别把左边的内容挤下去 */
+  .col-side > .card{padding:10px}
+  .col-side .card-h{margin-bottom:6px}
+  .col-side .card-h h2{font-size:13.5px}
+  .col-side .card-h h2 svg{width:15px;height:15px}
+  .col-side .badge{padding:1px 7px;font-size:11px}
+  .col-side .hintline{font-size:11px;margin:-3px 0 6px;line-height:1.5}
+  /* 右栏里 KPI 一律两行两列，3 列在 300px 内挤不开 */
+  .col-side .kpis,.col-side .kpis.k3{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:7px}
+  .col-side .kpis.k3 .kpi:last-child{grid-column:span 2}
+  .col-side .kpi{padding:6px 9px}
+  .col-side .kpi b{font-size:15px}
+  .col-side .kpi span{font-size:11px}
+  .col-side .kpi em{font-size:10px;min-height:12px;margin-top:1px}
+  .col-side .seg button{padding:4px 9px;font-size:11.5px;min-height:26px}
+  .col-side .s-row{padding:3px 2px;gap:6px}
+  .col-side .s-n{width:44px;font-size:11.5px}
+  .col-side .s-track{height:7px}
+  .col-side .s-v{width:20px;font-size:12px}
+  .col-side .chart-wrap svg{max-width:100%}
+  /* 月度明细表高度封顶：正好露出 3 个月（脚本按实测行高写 maxHeight），
+     第 4 个月起在这框里自己滚，左栏卡片不再拖着整页一起变长 */
+  .col-side .m-scroll{max-height:390px;padding-right:3px}
+  /* 年度 / 月度表：年份（月份）独占一行，下面 5 个指标按栏宽摊开
+     —— 左栏「月度统计」380px 摊三列，右栏「年度统计」只有 300px，摊两列 */
+  .col-side .m-row{display:grid;gap:1px 4px;padding:6px 3px}
+  #monthAside .m-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #statAside .m-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .col-side .m-c{padding:3px 4px}
+  .col-side .m-c i{font-size:10.5px}
+  .col-side .m-c b{font-size:13px}
+  .col-side .m-c.c-mo{grid-column:span 2;justify-content:flex-start;margin-bottom:2px}
+  #monthAside .m-c.c-mo{grid-column:span 3}
+  .col-side .m-c.c5{grid-column:span 2;background:#FAF6F0}
+  /* 月度 5 张 KPI：3 列排（前 3 张一行，扣款 + 净额占一行），
+     这样 KPI 只占 2 行，省下来的高度正好给下面的柱体加高 */
+  .col-side .m-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .col-side .m-kpis .kpi:last-child{grid-column:span 2}
+  /* 中间那栏留给订单，9 个阶段胶囊改成换行铺开，不再左右藏着拖 */
+  .col-main .tabs{flex-wrap:wrap;overflow:visible;padding-bottom:0}
+}
+
+@media (max-width:560px){
+  /* 手机窄屏同样：月份一行 + 5 个指标两列，跟窄栏保持一致 */
+  .m-row{display:grid;grid-template-columns:1fr 1fr;gap:1px 4px;padding:8px 2px}
+  .m-c.c-mo{grid-column:span 2;justify-content:flex-start;margin-bottom:2px}
+  .m-c.c5{grid-column:span 2}
+  /* 窄屏：抬头独占一行居中，操作按钮落到第二行也居中 */
+  .top{gap:10px}
+  .top-l{flex:0 0 100%;justify-content:center;max-width:100%}
+  /* 顶栏右侧控件多（身份 + 名单 + 同步 + 导出 + 新增），允许换行，别把整页顶出横向滚动 */
+  .top-r{flex:0 0 100%;justify-content:center;flex-wrap:wrap;row-gap:8px}
+}
+/* 平板及以下：身份切换器收掉说明文字，只留图标 + 名字 */
+@media (max-width:768px){
+  .owner-wrap .ow-hint{display:none}
+  .owner-wrap select{max-width:112px}
+}
+
+/* ---------- 弹层 ---------- */
+.mask{position:fixed;inset:0;background:rgba(35,25,15,.42);z-index:60;display:none}
+.mask.on{display:block}
+.sheet{
+  position:fixed;z-index:70;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;
+  max-height:92vh;overflow:auto;display:none;padding:6px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.sheet.on{display:block;animation:up .2s ease}
+@keyframes up{from{transform:translateY(20px);opacity:.6}to{transform:none;opacity:1}}
+.sheet-bar{width:38px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 10px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sheet-h b{font-size:16px}
+.x{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.x svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:#fff;color:var(--text);outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--pri)}
+.field textarea{min-height:66px;resize:vertical}
+.field .tip{font-size:11.5px;color:var(--muted);margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.sheet-acts{display:flex;gap:10px;margin-top:14px}
+.sheet-acts .btn{flex:1;min-height:46px}
+.dialog{
+  position:fixed;z-index:80;left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,86vw);
+  background:#fff;border-radius:14px;padding:18px;display:none;text-align:center;box-shadow:0 10px 30px rgba(40,28,16,.2)
+}
+.dialog.on{display:block}
+.dialog p{font-size:15px;margin-bottom:14px}
+.dialog .row{display:flex;gap:10px}
+.dialog .row .btn{flex:1;min-height:44px}
+/* 设计师名单弹层：比确认框宽一点、内容左对齐 */
+.dlg-list{width:min(420px,92vw);text-align:left;padding:18px 18px 16px}
+.dlg-title{display:block;font-size:15px;font-weight:500;margin-bottom:4px}
+.dlg-sub{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.6}
+.dm-list{list-style:none;margin:0 0 12px;padding:0;max-height:min(46vh,300px);overflow:auto}
+.dm-list li{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#FFFDFA}
+.dm-list .nm{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-list .cnt{flex:none;font-size:12px;color:var(--muted)}
+.dm-list .del{flex:none;width:44px;height:44px;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:10px;display:inline-flex;align-items:center;justify-content:center}
+.dm-list .del:hover{background:var(--danger-l);color:var(--danger)}
+.dm-list .del svg{width:17px;height:17px}
+.dm-empty{font-size:13px;color:var(--muted);padding:8px 2px 12px}
+.dm-add{display:flex;gap:8px;margin-bottom:14px}
+.dm-add input{flex:1;min-width:0;min-height:44px;padding:0 11px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text)}
+.dm-add .btn{flex:none;min-height:44px;padding:0 14px}
+.dm-foot{margin-top:0}
+.dm-foot .btn{width:100%}
+.toast{
+  position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);z-index:90;background:rgba(35,25,15,.92);color:#fff;
+  padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.22s;max-width:86vw;text-align:center
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast a{color:#FFD9A0;cursor:pointer;text-decoration:underline}
+/* 底部说明整体居中，跟上方内容对齐，不再贴左 */
+footer{max-width:1640px;margin:0 auto;padding:6px 16px 22px;color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
+footer button{display:inline-block}
+
+/* ---------- 移动端 ---------- */
+@media (max-width:768px){
+  .top{padding:10px 12px}
+  .top h1{font-size:16px}
+  .sync{display:none}
+  main{padding:12px 12px 6px;gap:12px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi.wide{grid-column:span 2}
+  .t-item{flex-wrap:wrap}
+  .t-acts{width:100%;justify-content:flex-end}
+  .btn{min-height:44px}
+  .btn.sm{min-height:38px;padding:0 12px}
+  .o-foot .btn{flex:1}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .o-detail{grid-template-columns:1fr}
+  footer{font-size:11.5px}
+}
+@media (min-width:769px){
+  .sheet{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(560px,92vw);border-radius:16px}
+  .sheet.on{animation:none}
+  .sheet-bar{display:none}
+  .o-step .btn{min-height:36px}
+}
+
+/* ===================== 视觉增强（纯装饰，不动结构与数字） ===================== */
+/* 背景：温暖的浅渐变 + 右上角柔光，不再是死板的纯色 */
+body{
+  background:
+    radial-gradient(1200px 520px at 85% -12%, #FBEEDD 0%, rgba(251,238,221,0) 60%),
+    linear-gradient(180deg,#FAF5EE 0%, #F3ECE3 100%);
+  background-attachment:fixed;
+}
+/* 卡片：极淡渐变 + 更柔和的悬浮阴影，立体一点 */
+.card{background:linear-gradient(180deg,#FFFFFF 0%, #FDFBF8 100%);box-shadow:0 4px 16px rgba(80,55,30,.07)}
+/* 顶部：毛玻璃渐变 + 下沿高光 */
+.top{
+  background:linear-gradient(180deg, rgba(250,244,236,.97), rgba(246,243,239,.84));
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 6px 18px rgba(80,55,30,.06);
+}
+/* logo：渐变 + 投影 */
+.logo{background:linear-gradient(135deg,var(--pri),var(--pri-d));box-shadow:0 3px 8px rgba(150,89,42,.35)}
+/* 主按钮：渐变 + 悬浮微抬升 */
+.btn.primary{background:linear-gradient(180deg,var(--pri),var(--pri-d));box-shadow:0 3px 10px rgba(150,89,42,.30)}
+.btn.primary:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(150,89,42,.38)}
+/* 卡片标题图标：包一层浅色圆角底，更像一个标记 */
+.card-h h2 svg{background:var(--pri-l);padding:4px;border-radius:9px;box-sizing:content-box}
+/* 订单卡：按阶段色加左侧色条（--sc 由 JS 写入），一眼区分状态；悬浮轻抬升 */
+.o-card{position:relative;border-left:4px solid var(--sc,#ECE6DE);transition:box-shadow .15s,transform .15s}
+.o-card:hover{box-shadow:0 6px 18px rgba(80,55,30,.10);transform:translateY(-1px)}
+.o-card.focus{border-left-color:var(--pri)}
+/* 阶段 tab：选中态渐变 + 投影；未下单合并按钮更明显 */
+.tab.on{background:linear-gradient(180deg,var(--pri),var(--pri-d));box-shadow:0 3px 8px rgba(150,89,42,.30)}
+.tab:hover{background:var(--pri-l)}
+.tab-pre{background:linear-gradient(180deg,#FBF6EE,#F6ECDF)}
+/* KPI：悬浮抬升 + 顶部一抹渐变；数字放大一点点 */
+.kpi{background:linear-gradient(180deg,#FFFDFA,#F8F2EA);border:1px solid var(--line)}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(80,55,30,.10);border-color:var(--pri)}
+.kpi.on{box-shadow:0 0 0 2px rgba(180,118,58,.20), 0 4px 12px rgba(80,55,30,.08)}
+.kpi b{font-size:21px}
+/* KPI 标签前面加图标（::before 不计入 textContent，不影响数字断言） */
+.kpi:has(b[data-stat="total"]) span::before,
+.kpi:has(b[data-m="mtotal"]) span::before,
+.kpi:has(b[data-y="ytotal"]) span::before{content:'📦 '}
+.kpi:has(b[data-stat="installed"]) span::before{content:'🔧 '}
+.kpi:has(b[data-stat="settled"]) span::before{content:'✅ '}
+.kpi:has(b[data-m="mordered"]) span::before,
+.kpi:has(b[data-y="yordered"]) span::before{content:'📝 '}
+.kpi:has(b[data-m="mcommission"]) span::before,
+.kpi:has(b[data-y="ycommission"]) span::before{content:'💰 '}
+.kpi:has(b[data-m="mdeduction"]) span::before,
+.kpi:has(b[data-y="ydeduction"]) span::before{content:'⚠️ '}
+.kpi:has(b[data-m="mnet"]) span::before,
+.kpi:has(b[data-y="ynet"]) span::before{content:'🧮 '}
+/* 月度 / 年度柱体标签更醒目 */
+.mb-tag{font-weight:700;color:var(--pri-d)}
+/* 今天要处理：更醒目的渐变描边 */
+.today-card{border-color:#F0D9C2;background:linear-gradient(180deg,#FFFDF9,#FDF6EC);
+  box-shadow:0 4px 16px rgba(180,118,58,.10)}
+/* 空状态加个图标，不再是一行灰字 */
+.empty::before{content:'🌿';display:block;font-size:26px;opacity:.55;margin-bottom:4px}
+/* 阶段横条清单：填充加一点高光，已完成的更亮 */
+.s-fill{box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+/* 弹层 / 按钮统一圆润投影 */
+.sheet,.dialog{box-shadow:0 14px 40px rgba(40,28,16,.22)}
+
+/* ===================== 视觉素材增强（第十三轮：图片 + 按钮美化） ===================== */
+/* 顶部 Hero 欢迎区：开门见画 */
+.hero{
+  display:flex;align-items:center;gap:22px;padding:20px 22px;margin-bottom:16px;
+  background:
+    radial-gradient(150px 130px at 88% 18%, rgba(214,101,63,.12), transparent 70%),
+    linear-gradient(120deg,#FFF8EF 0%, #FDEEDD 55%, #F7E2C8 100%);
+  border:1px solid rgba(201,161,107,.30);border-radius:16px;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:"";position:absolute;left:-46px;bottom:-64px;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%, rgba(180,118,58,.10), transparent 70%);
+}
+.hero-l{flex:1;min-width:0;position:relative;z-index:1}
+.hero-l h2{display:flex;align-items:center;gap:10px;margin:0 0 7px;font-size:21px;color:#5A4632;font-weight:800}
+.hero-l h2 .h-ico{
+  width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:11px;color:#fff;
+  background:linear-gradient(135deg,#D9653F,#E8895F);box-shadow:0 6px 16px rgba(214,101,63,.35);
+}
+.hero-l h2 .h-ico svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hero-l p{margin:0;color:#8A7659;font-size:14px;line-height:1.65}
+.hero-l p b{color:#B2763A}
+.hero-art{flex:none;width:212px;height:152px;position:relative;z-index:1}
+.hero-art svg{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 20px rgba(120,80,40,.18))}
+@media (max-width:680px){ .hero{flex-direction:column-reverse;align-items:stretch} .hero-art{width:180px;height:128px;align-self:flex-end} }
+
+/* 阶段 tab：图标徽章代替纯圆点 */
+.tab .pip{
+  width:20px;height:20px;border-radius:7px;display:grid;place-items:center;flex:none;
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55);
+}
+.tab .pip svg{width:12px;height:12px;display:block;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab{transition:transform .14s, box-shadow .14s, background .14s}
+.tab:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(120,80,40,.14)}
+.tab.on{box-shadow:0 8px 20px rgba(214,101,63,.30)}
+
+/* 操作按钮：图标 + 更圆润的反馈 */
+.btn .b-txt{display:inline-block}
+.btn{border-radius:11px;font-weight:600;transition:transform .14s, box-shadow .14s, background .14s, border-color .14s}
+.btn:hover{transform:translateY(-1px)}
+.btn.ghost:hover{background:var(--pri-l);border-color:var(--pri)}
+.btn.danger:hover{background:#FCEDED;border-color:var(--danger)}
+.btn.primary{background:linear-gradient(180deg,var(--pri),var(--pri-d));box-shadow:0 4px 12px rgba(150,89,42,.32)}
+.btn.primary:hover{box-shadow:0 6px 16px rgba(150,89,42,.42)}
+
+/* 空状态：温馨衣柜插画（::before 不进 textContent，数字断言安全） */
+.empty::before{
+  content:"";display:block;width:118px;height:118px;margin:2px auto 12px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='54' fill='%23F4E7D6'/%3E%3Crect x='40' y='44' width='40' height='44' rx='6' fill='%23FFFFFF' stroke='%23C9A16B' stroke-width='3'/%3E%3Cline x1='60' y1='44' x2='60' y2='88' stroke='%23C9A16B' stroke-width='3'/%3E%3Ccircle cx='53' cy='64' r='2.6' fill='%23C9A16B'/%3E%3Ccircle cx='67' cy='64' r='2.6' fill='%23C9A16B'/%3E%3Cpath d='M51 76q9 6 18 0' fill='none' stroke='%23C9A16B' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M30 44c0-10 8-16 16-16' fill='none' stroke='%23D9B98C' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/contain;
+  opacity:.92;
+}
+
+/* ===================== 视觉精修：大气 · 整洁 · 配色协调 =====================
+   思路：把全站颜色收敛到一条主线 —— 暖木焦糖（#B4763A / #8E5220）+ 陶土橙点缀
+   （#D9653F）+ 象牙灰中性色；圆角统一到 10/12/14/18，投影分三级，
+   靠留白和层级把画面理顺。纯 CSS 覆盖：不动 DOM、不动文案、不动任何数字。 */
+
+/* ---- 1. 底色 · 细节 ---- */
+body{
+  background:
+    radial-gradient(1100px 460px at 88% -14%, rgba(217,101,63,.10), rgba(217,101,63,0) 62%),
+    radial-gradient(900px 420px at -8% 4%, rgba(180,118,58,.07), rgba(180,118,58,0) 60%),
+    linear-gradient(180deg,#FBF8F3 0%, #F6F1EA 52%, #F1EBE2 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:#DDD2C3;border-radius:99px;border:3px solid transparent;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background:#C9BAA6;background-clip:padding-box}
+::selection{background:rgba(180,118,58,.20)}
+/* 数字统一等宽字形：表格里上下对得齐，一眼扫得下去 */
+.kpi b,.m-c b,.tab .n,.s-v,.o-amt,.badge,.t-date,.mb-tag,.seg button{font-variant-numeric:tabular-nums}
+
+/* ---- 2. 顶栏：收敛的暖白 + 细下沿，标题更挺 ---- */
+.top{
+  padding:11px 18px 10px;
+  background:rgba(252,249,245,.88);
+  border-bottom:1px solid rgba(180,118,58,.13);
+  box-shadow:0 1px 0 rgba(255,255,255,.75) inset, 0 4px 16px rgba(90,60,32,.05);
+}
+.top h1{font-weight:800;letter-spacing:.3px;color:var(--ink)}
+.logo{background:linear-gradient(140deg,#C6863F,#8E5220);box-shadow:0 6px 14px rgba(142,82,32,.26), inset 0 1px 0 rgba(255,255,255,.30)}
+.sync{background:rgba(255,255,255,.92);border-color:rgba(180,118,58,.16);color:var(--ink-3);font-weight:600}
+
+/* ---- 3. 卡片：统一圆角 / 细描边 / 两级投影，留白放大一点更透气 ---- */
+.card{
+  border:1px solid var(--line-2);border-radius:var(--r-4);
+  background:linear-gradient(180deg,#FFFFFF 0%,#FFFDFA 100%);
+  box-shadow:var(--sh-2);padding:16px;
+  /* 关键：不让卡片被内部内容（尤其那排阶段胶囊）反向撑宽，
+     否则窄屏整列会被顶到 1000px 以上、整页横向滚动 */
+  min-width:0;
+}
+.card-h{margin-bottom:12px}
+.card-h h2{font-size:15.5px;font-weight:800;letter-spacing:.3px;color:var(--ink)}
+.card-h h2 svg{stroke:var(--pri-d);background:linear-gradient(160deg,#FBF2E5,#F4E5D1)}
+.badge{background:#F8F3EB;border-color:rgba(180,118,58,.16);color:#7E6E5A;font-weight:600;padding:3px 10px}
+.hintline{color:var(--ink-3);line-height:1.6}
+@media (min-width:769px){ main{padding:16px 18px 10px} main{gap:16px} .col-main{gap:16px} }
+
+/* ---- 4. Hero：暖金渐变 + 一道斜向高光，像一张「封面」 ---- */
+.hero{
+  padding:24px 26px;border-radius:20px;margin-bottom:18px;
+  background:
+    radial-gradient(420px 240px at 88% 6%, rgba(217,101,63,.14), rgba(217,101,63,0) 68%),
+    radial-gradient(320px 220px at 4% 100%, rgba(180,118,58,.10), rgba(180,118,58,0) 70%),
+    linear-gradient(122deg,#FFFCF7 0%, #FDF2E4 52%, #F6E3CA 100%);
+  border:1px solid rgba(201,161,107,.26);
+  box-shadow:0 2px 4px rgba(120,80,40,.04), 0 18px 40px rgba(160,110,55,.10), inset 0 1px 0 rgba(255,255,255,.85);
+}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 34%);
+}
+.hero-l h2{font-size:22px;font-weight:800;letter-spacing:.2px;color:#4E3A28}
+.hero-l h2 .h-ico{width:38px;height:38px;border-radius:12px;background:linear-gradient(140deg,#E2824F,#C0552C);box-shadow:0 8px 18px rgba(192,85,44,.28)}
+.hero-l p{color:#7E6A4F;font-size:13.5px;line-height:1.75}
+@media (max-width:680px){ .hero{padding:18px 16px} .hero-l h2{font-size:20px} }
+
+/* ---- 5. 按钮：一套手感（圆角 12 / 细描边 / 悬浮微抬升） ---- */
+.btn{
+  border-radius:12px;font-weight:600;border-color:var(--line-2);
+  background:linear-gradient(180deg,#FFFFFF,#FCFAF7);box-shadow:0 1px 2px rgba(58,42,26,.04);
+}
+.btn:hover{box-shadow:0 8px 18px rgba(120,80,40,.12)}
+.btn.primary{border-color:transparent;background:linear-gradient(180deg,#C0803F,#985C24);box-shadow:0 4px 14px rgba(150,89,42,.28), inset 0 1px 0 rgba(255,255,255,.22)}
+.btn.primary:hover{background:linear-gradient(180deg,#C98A45,#9F622A);box-shadow:0 8px 20px rgba(150,89,42,.34)}
+.btn.ghost:hover{background:linear-gradient(180deg,#FFFDFA,#F9F1E6)}
+.btn.danger{border-color:rgba(214,69,69,.22);color:#C0392B}
+.btn.danger:hover{background:#FDF1F1}
+.btn.reset{background:linear-gradient(180deg,#FBF3E8,#F6EADB);border-color:rgba(180,118,58,.22);color:var(--pri-d)}
+.btn:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* ---- 6. 搜索 / 下拉：跟按钮同一套描边与聚焦环 ---- */
+.search,.sel{background:linear-gradient(180deg,#FFFFFF,#FDFBF8);border-color:var(--line-2);border-radius:12px;box-shadow:0 1px 2px rgba(58,42,26,.03)}
+.search:focus-within,.sel:focus-within{border-color:rgba(180,118,58,.45);box-shadow:var(--ring)}
+.sel select{font-weight:600;color:var(--ink-2)}
+
+/* ---- 7. 阶段 tab：胶囊更干净，选中态渐变 + 柔和投影 ---- */
+.tab{border-color:var(--line-2);background:linear-gradient(180deg,#FFFFFF,#FCFAF7);color:var(--ink-2);font-weight:600;padding:0 13px}
+.tab.on,.tab.on:hover{background:linear-gradient(180deg,#C0803F,#985C24);border-color:transparent;color:#fff}
+.tab-pre{background:linear-gradient(180deg,#FBF7F1,#F5EFE6);border-color:rgba(180,118,58,.26)}
+
+/* ---- 8. KPI：白底卡片 + 关键数字上色（提成焦糖 / 扣款砖红 / 净额墨绿） ---- */
+.kpi{background:linear-gradient(180deg,#FFFFFF,#FDFAF6);border-color:rgba(60,42,26,.09);border-radius:var(--r-3);box-shadow:0 1px 2px rgba(58,42,26,.03)}
+.kpi b{letter-spacing:.2px}
+.kpi span{font-weight:600}
+.kpi em{font-weight:600}
+.kpi:has(b[data-m="mcommission"]) b,.kpi:has(b[data-y="ycommission"]) b{color:#985C24}
+.kpi:has(b[data-m="mdeduction"]) b,.kpi:has(b[data-y="ydeduction"]) b{color:#C0392B}
+.kpi:has(b[data-m="mnet"]) b,.kpi:has(b[data-y="ynet"]) b{color:#2F7D5B}
+
+/* ---- 9. 待办 / 订单卡：白面 + 细边，左侧继续用阶段色条 ---- */
+.t-item{border-color:var(--line-2);background:linear-gradient(180deg,#FFFFFF,#FEFCF9)}
+.t-item:hover{box-shadow:0 6px 16px rgba(120,80,40,.08)}
+.t-item.over{background:linear-gradient(180deg,#FFF7F7,#FDEBEB);border-color:rgba(214,69,69,.22)}
+.t-item.soon{background:linear-gradient(180deg,#FFFDF8,#FFF6E8);border-color:rgba(196,146,73,.26)}
+.o-card{border-color:var(--line-2);border-radius:var(--r-3);background:linear-gradient(180deg,#FFFFFF,#FEFCF9);box-shadow:0 1px 2px rgba(58,42,26,.03);padding:12px 13px}
+.o-card:hover{box-shadow:0 12px 28px rgba(120,80,40,.11);transform:translateY(-2px)}
+.o-card.focus{box-shadow:var(--ring), 0 10px 24px rgba(180,118,58,.12)}
+.o-name{color:var(--ink);letter-spacing:.2px}
+.o-amt{font-size:15.5px}
+.o-info{color:var(--ink-2)}
+.o-comm{background:#FBF6EE;border:1px solid rgba(180,118,58,.14);color:#7A6242;font-weight:600;border-radius:9px}
+.o-remark{background:#FAF7F2;border:1px solid rgba(60,42,26,.06);color:var(--ink-3)}
+.flowline i{height:5px;border-radius:3px;background:#EFE9E0}
+.flowline i.done{background:linear-gradient(90deg,#C98A45,#B4763A)}
+.flowline i.cur{outline:2px solid rgba(180,118,58,.5)}
+
+/* ---- 10. 统计：分段控件 / 横条 / 月度明细统一质感 ---- */
+.seg{background:#F6F1E9;border-color:var(--line-2)}
+.seg button.on{box-shadow:0 1px 2px rgba(58,42,26,.09), inset 0 1px 0 rgba(255,255,255,.9)}
+.s-track{background:#F0EAE1;box-shadow:inset 0 1px 2px rgba(58,42,26,.05)}
+.s-row:hover{background:#FBF5EC}
+.m-row{border-bottom-color:rgba(60,42,26,.06)}
+.m-row.pick:hover{background:#FBF5EC}
+.m-row.on{background:linear-gradient(180deg,#FBF3E7,#F7EBD9);box-shadow:0 0 0 1px rgba(180,118,58,.22)}
+.m-c i{color:#9A8F80;letter-spacing:.2px}
+.m-c b{color:var(--ink)}
+.m-c.c-mo{letter-spacing:.3px}
+.m-c.c4 b{color:#C0392B}
+.m-c.c5 b{color:#2F7D5B}
+.mb-axis{border-bottom-color:rgba(60,42,26,.10)}
+
+/* ---- 11. 弹层：遮罩加轻微毛玻璃，面板更圆润 ---- */
+.mask{background:rgba(38,27,17,.40);backdrop-filter:blur(4px)}
+.sheet-h{border-bottom:1px solid rgba(60,42,26,.07);padding-bottom:10px;margin-bottom:14px}
+.sheet-h b{font-weight:800;letter-spacing:.2px}
+.field label{font-weight:600;color:var(--ink-3)}
+.field input,.field select,.field textarea{border-color:rgba(60,42,26,.12);border-radius:var(--r-2);background:#FDFCFA}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--pri);background:#fff;box-shadow:var(--ring)}
+.x:hover{background:#F8F2EA}
+@media (max-width:768px){ .sheet{border-radius:24px 24px 0 0} .sheet-bar{width:42px;background:#E4DACB} }
+@media (min-width:769px){ .sheet{border-radius:18px} .dialog{border-radius:18px} }
+
+/* ---- 12. 页脚 ---- */
+footer{margin:8px auto 0;padding:14px 16px 26px;border-top:1px solid rgba(60,42,26,.07);color:var(--ink-3)}
+
+/* ---- 13. 尊重「减弱动效」偏好 ---- */
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.001ms !important;transition-duration:.001ms !important} }
+
+/* ===== 顶栏账号区 ===== */
+.me-wrap{display:inline-flex;align-items:center;gap:6px;background:var(--pri-l);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:0 10px;max-width:min(42vw,230px)}
+.me-ico{width:18px;height:18px;flex:none;color:var(--pri)}
+.me-ico svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.me-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.me-role{flex:none;font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* ===== 登录 / 注册门 ===== */
+body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none}
+.auth{min-height:86vh;display:flex;align-items:center;justify-content:center;padding:22px 14px}
+.auth-box{width:100%;max-width:384px;background:var(--card);border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--sh-3);padding:22px 20px}
+.auth-head{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:16px}
+.auth-logo{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:var(--pri-l);color:var(--pri)}
+.auth-logo svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.auth-title{font-size:16px;font-weight:500;color:var(--text)}
+.auth-sub{font-size:12px;color:var(--muted)}
+.auth-box .btn.primary{width:100%;min-height:46px;justify-content:center}
+.auth-sw{margin-top:12px;text-align:center;font-size:13px;color:var(--muted)}
+.linkbtn{border:0;background:none;color:var(--pri);font-size:13px;font-family:inherit;cursor:pointer;padding:0 2px;min-height:32px}
+.auth-tip{margin:10px 0 0;min-height:18px;font-size:12.5px;color:var(--danger);text-align:center}
+.sync-tip{margin-top:10px;padding:8px 11px;border-radius:9px;font-size:12.5px;line-height:1.6;border:1px solid transparent;text-align:left}
+.sync-tip.ok{background:#EAF3DE;color:#3B6D11;border-color:#C0DD97}
+.sync-tip.warn{background:#FCEBEB;color:#A32D2D;border-color:#F7C1C1}
+.sync-tip.local{background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7}
+.offline-bar{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#FDF3E3;border:1px solid #EBD3A8;color:#7A5320;font-size:12.5px;line-height:1.65;text-align:left}
+.offline-bar b{display:block;font-size:13px;color:#8A4B0F;margin-bottom:2px}
+.ob-url{display:block;margin:6px 0 8px;padding:6px 8px;border-radius:7px;background:#FFFBEF;border:1px dashed #D9BB84;font-size:12px;word-break:break-all;user-select:all;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ob-acts{display:flex;gap:8px;flex-wrap:wrap}
+.offline-bar a.btn{text-decoration:none}
+
+/* ===== 账号管理条目 ===== */
+.dm-list .tag{flex:none;font-size:11px;padding:2px 7px;border-radius:6px;background:var(--pri-l);color:var(--pri-d);white-space:nowrap}
+.dm-list .tag.boss{background:#EAF3DE;color:#3B6D11}
+.dm-list .op{flex:none;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:8px;min-height:32px;padding:0 9px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap}
+.dm-list .op:hover{color:var(--pri);border-color:var(--pri)}
+.dm-list .op.warn:hover{color:var(--danger);border-color:var(--danger);background:var(--danger-l)}
+
+</style>
+</head>
+<body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
+
+<header class="top" data-page-node-id="jApAaXM7MSKnCyJ8yUt3XZ">
+  <div class="top-l" data-page-node-id="AQBn8tEK5WGu2hN2yr23uY">
+    <span class="logo" data-page-node-id="FIVicqUgAgbM1dvVly6EoH">
+      <svg viewBox="0 0 24 24" data-page-node-id="RXykm3zdxaNCA0WqgIkfwq"><path d="M4 20V6l8-2v16" data-page-node-id="zBlGn6cfxGZIRyo6enFUhz"/><path d="M12 8h8v12H12" data-page-node-id="xRBim22bTl5RwJrX7yQC8c"/><path d="M8 10v8M16 12v6" data-page-node-id="zGpYG8PkgX9tWsugtPpi6N"/></svg>
+    </span>
+    <div data-page-node-id="IHc1P3Da0bBa6WNEcSMKHY">
+      <h1 id="appTitle" class="edit-title" tabindex="0" title="点击可直接改成你的店名 / 设计师名字" data-page-node-id="NsYXzjsBughCisHLprDrg1">定制衣柜 · 订单跟进</h1>
+      <div class="sub" id="todayLabel" data-page-node-id="3FBjWaKuD62GEJUyC5Lk2C">—</div>
+    </div>
+  </div>
+  <div class="top-r" data-page-node-id="kGVu762E7ZHoPugXMUYPQR">
+    <span class="me-wrap" id="meWrap" title="当前登录账号" data-page-node-id="0YmaWAOUB7e1DrlOdpQJZu">
+      <span class="me-ico" aria-hidden="true" data-page-node-id="2DOWDdpnRwLAGeDaQosN2P"><svg viewBox="0 0 24 24" data-page-node-id="fFHReLe1iXO5GHG0IqNl6i"><circle cx="12" cy="8" r="4" data-page-node-id="NG9whEQHwKjZ3sC9skxTEk"/><path d="M4 21c0-4.2 3.6-6 8-6s8 1.8 8 6" data-page-node-id="UCFcWQAYhEM5G01Nscz0vt"/></svg></span>
+      <span class="me-name" id="meName" data-page-node-id="fF9MzQA1luvsbSBtYdpGHy">未登录</span>
+      <span class="me-role" id="meRole" data-page-node-id="4ZKOeV2kyzhKvG0n2ExodP">—</span>
+    </span>
+    <button class="btn sm ghost hide" id="btnAccounts" title="管理账号（仅老板可见）" data-page-node-id="5degx3aF8V8lHpmMFshChW">账号</button>
+    <button class="btn sm ghost" id="btnLogout" title="退出登录" data-page-node-id="egVIOXGFjcmWXIrLCCYKs6">退出</button>
+    <label class="owner-wrap" id="ownerWrap" title="切换身份：老板看全部，设计师只看自己的单" data-page-node-id="hd3sAK6UhgunJmMI3xic5z">
+      <span class="ow-ico" aria-hidden="true" data-page-node-id="6oLYH9Ci2mKTzOGb8eFryk"><svg viewBox="0 0 24 24" data-page-node-id="x5SlVRbZ9CGDAnKDbuacq4"><circle cx="12" cy="8" r="4" data-page-node-id="mQd9a2c247zsHtaX5W3neX"/><path d="M4 21c0-4.2 3.6-6 8-6s8 1.8 8 6" data-page-node-id="ykZNctAVO3BBpt63FVZTKB"/></svg></span>
+      <select id="ownerSel" aria-label="当前身份" data-page-node-id="310ZDe9rLqA1SYhkQ1BWdx"></select>
+      <span class="ow-hint" id="ownerHint" data-page-node-id="KjNr5SPaYc5ya2a3MdAP8B">看全部人的订单</span>
+    </label>
+    <button class="btn sm ghost" id="btnDesigners" title="管理设计师名单" data-page-node-id="i2dMruVllYfv5NPnWxczOS">
+      <svg viewBox="0 0 24 24" data-page-node-id="oUgrbLMIrWGyN2L21ROkhh"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" data-page-node-id="WzDX9z0jm2a5hI9lts1HfD"/><circle cx="9" cy="7" r="4" data-page-node-id="Cb8usJfcBmaZol0pnJjHYE"/><line x1="19" y1="8" x2="19" y2="14" data-page-node-id="aGLvJx3KVbf2UJiTL5wDCX"/><line x1="16" y1="11" x2="22" y2="11" data-page-node-id="yoAG2GR9K1YNSmQal2G228"/></svg>名单
+    </button>
+    <span class="sync" id="syncBadge" data-page-node-id="usZBCBOjPXtwWCjPpEhTQ1"><i class="dot" data-page-node-id="rhgyTCojMxVeJBcXWFPeD4"></i><span id="syncText" data-page-node-id="YGGyhQWV7E2kvaboMTufFP">连接中…</span></span>
+    <button class="btn sm ghost" id="btnExport" title="导出 JSON 备份" data-page-node-id="P412E6kc1X5T6gSDsCj3FQ">
+      <svg viewBox="0 0 24 24" data-page-node-id="GGmICvnlcbCbigrXH9oirM"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" data-page-node-id="de6AEAkXFXs0Q1hawiAYn9"/><polyline points="7 10 12 15 17 10" data-page-node-id="TFTwgpvvA3Csbj2LWvFiXf"/><line x1="12" y1="15" x2="12" y2="3" data-page-node-id="AB2de93lJE6yosxhZHFzcL"/></svg>导出
+    </button>
+    <button class="btn sm ghost hide" id="btnImport" title="从备份文件恢复（导入 JSON）" data-page-node-id="btnImportNodeId01">
+      <svg viewBox="0 0 24 24" data-page-node-id="svgImportNodeId001"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" data-page-node-id="p1ImportNodeId001"/><polyline points="7 4 12 9 17 4" data-page-node-id="p2ImportNodeId001"/><line x1="12" y1="9" x2="12" y2="21" data-page-node-id="p3ImportNodeId001"/></svg>导入
+    </button>
+    <input type="file" id="fileImport" accept=".json,application/json" class="hide" data-page-node-id="fileImportNodeId1">
+    <button class="btn primary" id="btnAdd" data-page-node-id="J1tGfgw1lYL3D05vWE63th">
+      <svg viewBox="0 0 24 24" data-page-node-id="OHkMdCfDAnnpsxJBAAaVMU"><line x1="12" y1="5" x2="12" y2="19" data-page-node-id="xURFnLSrOcD1b3JwhjgjhR"/><line x1="5" y1="12" x2="19" y2="12" data-page-node-id="FsLNBYCGv3PsuBTQ45Ic9K"/></svg>新增订单
+    </button>
+  </div>
+</header>
+
+<main data-page-node-id="AE9dmsJcFDgktrlgleKBFW">
+ <div class="col-main" data-page-node-id="CcIaasnRxpi3Io7DtBTsOq">
+
+  <!-- 欢迎区：一张定制衣柜场景插画，开门见画 -->
+  <section class="card hero" data-page-node-id="4hgHVNit3iXFVrxqgYCFxB">
+    <div class="hero-l" data-page-node-id="9mgRptkr8n90VJrRNNdH31">
+      <h2 data-page-node-id="SkUAkex6kSWx6z8hgNS8wa">
+        <span class="h-ico" data-page-node-id="8WlMmC4IpzOjdm99sjsozx"><svg viewBox="0 0 24 24" data-page-node-id="vT4GTCqlZNgeZH3j2OOoMX"><path d="M4 20V6l8-2v16" data-page-node-id="LKlmgqW6SfT5OYl0FqBzlz"/><path d="M12 8h8v12H12" data-page-node-id="3eLYCdE1I3XcTP1lHAIzWR"/><path d="M8 10v8M16 12v6" data-page-node-id="fB3lsIMN7AB9DRIpDoWdNV"/></svg></span>
+        定制衣柜 · 订单跟进台
+      </h2>
+      <p data-page-node-id="9ZJHPwHSYJUDXRnKg8LlN6">把每一单的<b data-page-node-id="zbkJwRnAGH0S09sdrDSVaH">测量、出图、复尺、下单、安装</b>串成一条线，逾期自动提醒，月度 / 年度业绩一眼看清。</p>
+    </div>
+    <div class="hero-art" aria-hidden="true" data-page-node-id="HyDFHv72nSIJ5bzZKFmYkX">
+      <svg viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg" fill="none" data-page-node-id="BFW95yg3MrR9XL6rvEMf24">
+        <circle cx="120" cy="88" r="76" fill="#FBEAD7" data-page-node-id="kTphUqflk82XXBCRwvwowF"/>
+        <path d="M44 92 80 60l34 30" stroke="#E6C79E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="LSlBGaiQz1W35TTaSrr8Ya"/>
+        <circle cx="80" cy="46" r="4" fill="#E6C79E" data-page-node-id="5z4ZaHXqq7qsK1ap7rTJMd"/>
+        <rect x="96" y="44" width="80" height="98" rx="11" fill="#FFFFFF" stroke="#C9A16B" stroke-width="4" data-page-node-id="sC76kgdIRrMO1pktTGWkzS"/>
+        <line x1="136" y1="44" x2="136" y2="142" stroke="#C9A16B" stroke-width="4" data-page-node-id="Csmz18AwfoZymmrlKIgouL"/>
+        <rect x="104" y="54" width="26" height="32" rx="5" fill="#F7E9D4" stroke="#C9A16B" stroke-width="2.4" data-page-node-id="k9KR5GxnwANXoXGB3CYxA4"/>
+        <rect x="142" y="54" width="26" height="32" rx="5" fill="#F7E9D4" stroke="#C9A16B" stroke-width="2.4" data-page-node-id="2vgD4CyQ2zudFFX2kLcxpq"/>
+        <circle cx="129" cy="98" r="3.2" fill="#C9A16B" data-page-node-id="tVjzyXgGBPsPWwpNSPm5u4"/>
+        <circle cx="143" cy="98" r="3.2" fill="#C9A16B" data-page-node-id="2MqofJHiGCHA9hXqkNldUA"/>
+        <rect x="106" y="112" width="58" height="22" rx="5" fill="#F7E9D4" stroke="#C9A16B" stroke-width="2.4" data-page-node-id="G8yw31Ohhp57iQC4baXArU"/>
+        <g transform="rotate(-26 176 126)" data-page-node-id="QXahccMD2Asivvxsk0AmyN">
+          <rect x="150" y="120" width="52" height="13" rx="3.5" fill="#D9653F" stroke="#B2763A" stroke-width="2" data-page-node-id="5ZDEwhxvwLkaBvcsCnwkOC"/>
+          <path d="M158 120v13M166 120v13M174 120v13M182 120v13M190 120v13" stroke="#FFFFFF" stroke-width="1.6" data-page-node-id="fQKoNuAugYP0YUyKPOQ4oJ"/>
+        </g>
+        <path d="M40 142c0-16-13-20-13-20 0 0 15 2 15 16" fill="#9CC277" data-page-node-id="E37nXeoVw1fAwevMIBAUhT"/>
+        <path d="M40 142c0-18 13-22 13-22 0 0-15 2-15 18" fill="#7FAE5C" data-page-node-id="cmhKDq1EgZImzilOdPfY4o"/>
+        <rect x="28" y="140" width="26" height="22" rx="5" fill="#E8895F" data-page-node-id="uKZv7OrxXsFty3nnTdm1se"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 模块一：今天要处理 -->
+  <section class="card today-card" data-page-node-id="qDcaefPKjIxPUh5xHzcl7N">
+    <div class="card-h" data-page-node-id="VJc3TNfDh5olUOwMrRkAIj">
+      <h2 data-page-node-id="Sn4BfKAlrg73C0Ca0Suxts">
+        <svg viewBox="0 0 24 24" data-page-node-id="RQNpulLlDbNglcJECIsPBw"><circle cx="12" cy="12" r="9" data-page-node-id="KzijsPUHgwByykqPEpSZ84"/><polyline points="12 7 12 12 15.5 14" data-page-node-id="YnCWjM7Mdnj9vP9NKsY3BO"/></svg>
+        今天要处理
+      </h2>
+      <div style="display:flex;gap:8px;align-items:center" data-page-node-id="s88k8ZbdlnkabJCDYEKvVO">
+        <span class="badge" id="todayCount" data-page-node-id="u0HVJBeFQtRaAxxbnAAEYY">0 项</span>
+        <span class="badge" id="todayScope" data-page-node-id="Egb9uigb2CpS9IDAZZCEGu">全量</span>
+      </div>
+    </div>
+    <div class="hintline" id="todayHint" data-page-node-id="AGBSNqyJeMDgyzBSsYOu1G">点条目可跳到下方订单卡片；逾期的会一直留在这里。</div>
+    <ul class="today-list" id="todayList" data-page-node-id="SBYvdAB8iBKupwrm8rZCpN"></ul>
+    <div class="empty hide" id="todayEmpty" data-page-node-id="Ofjb6xnZm7ZBnk6t69y3XN">当前筛选下没有到期待办 ✓</div>
+  </section>
+
+  <!-- 模块二：订单跟进台 -->
+  <section class="card" data-page-node-id="H1J1uzFdb6MpOITZs0e5Hw">
+    <div class="card-h" data-page-node-id="HOBVnWYQhhXpGVpeO7m9Ui">
+      <h2 data-page-node-id="5fTbaKkTkpeoCFVejvUiWI">
+        <svg viewBox="0 0 24 24" data-page-node-id="332WS0khVkWBSRfvUJp6CA"><rect x="3" y="4" width="18" height="17" rx="2" data-page-node-id="dnedRKuQ6vgDCYzvbAj3Os"/><path d="M8 2v4M16 2v4M3 10h18" data-page-node-id="sP7F5VLVEDj1Twqm5zFR8U"/></svg>
+        订单跟进
+      </h2>
+      <span class="badge" id="listCount" data-page-node-id="Vu40Srarv19kBgiHhkbwTJ">0 单</span>
+    </div>
+
+    <!-- 条件胶囊：当前生效的筛选条件，可单独关掉 -->
+    <div class="chips" id="chips" data-page-node-id="GupzbN8rEvzk8yuIIhQngW"></div>
+
+    <!-- 工具行 -->
+    <div class="tools" data-page-node-id="jFlLxbbmvosEDBTz1nBYCD">
+      <label class="search" data-page-node-id="hBV0kJCosn7FwSo1UgmR7M">
+        <svg viewBox="0 0 24 24" data-page-node-id="8BdI3O4ruG2VdPe3WqIHMd"><circle cx="11" cy="11" r="7" data-page-node-id="aWgEuZU6SFmwehHXmAvxMY"/><line x1="21" y1="21" x2="16.5" y2="16.5" data-page-node-id="ZljtL8yDOcVsIZ8yTEXeXA"/></svg>
+        <input id="kw" type="search" placeholder="搜客户 / 电话 / 小区 / 备注" autocomplete="off" data-page-node-id="70YuT8GIXlSNENVMpEGnbd">
+      </label>
+      <label class="sel" data-page-node-id="RReIluEcuDFQW0HdpSwX2D"><span data-page-node-id="iHfRopX0yE3AK0PCAzmldl">接单年</span><select id="yearSel" data-page-node-id="XAX2IEXwdc5iv1jRdirHxk"><option value="" data-page-node-id="YAOL6fXpIi3VzaV5sbtdNQ">全部年份</option></select></label>
+      <label class="sel" data-page-node-id="BnbDg3NWCDkPcECbAjwbbw"><span data-page-node-id="1gGQxrMIaBvQnEAGkIAe37">接单月</span><select id="monthSel" data-page-node-id="Ogc3uOh9xHvNe1uqIVWPMm"><option value="" data-page-node-id="uGZ06ENscxZHEGtspckdrv">全部月份</option></select></label>
+      <label class="sel" data-page-node-id="oNBCietilv490FnsW2CHGT"><span data-page-node-id="iThgb8G7RKr4kSPrOa2vAG">排序</span><select id="sortSel" data-page-node-id="NX3XqyN0LhgCHY9uS9wwdK">
+        <option value="follow_asc" data-page-node-id="GMjKTMlsTc0KSFcctR6uW6">跟进日期 ↑</option>
+        <option value="follow_desc" data-page-node-id="xIpPZnPOZA2zkJWmrvKX0T">跟进日期 ↓</option>
+        <option value="order_asc" data-page-node-id="qJb9t5dio3HHuB3N1hiOWP">接单日期 ↑</option>
+        <option value="order_desc" data-page-node-id="mr29SiX9fzTqkcKWZiguph">接单日期 ↓</option>
+        <option value="amount_desc" data-page-node-id="GLbSf61dlx9pVipbJOD6Jv">金额 ↓</option>
+        <option value="amount_asc" data-page-node-id="zxVxOBvRBfnkGZ3vQTRftj">金额 ↑</option>
+      </select></label>
+      <button class="btn sm reset hide" id="btnReset" data-page-node-id="EGB6ZRaU8MZ3VK8CExPSNU">重置筛选</button>
+    </div>
+
+    <div class="tabs" id="stageTabs" data-page-node-id="dNVHoYpS60Dscq9pQ8WaE2"></div>
+    <ul class="order-list" id="orderList" data-page-node-id="ZXQ4AfvP0InhE2oCR92N9I"></ul>
+    <div class="empty hide" id="orderEmpty" data-page-node-id="Zdp8iQep95nlhaxfkefnC8">这个阶段暂时没有订单</div>
+  </section>
+
+ </div><!-- /.col-main -->
+
+ <!-- 左侧栏：只放「月度统计」，宽屏时钉在左边不动（尺寸与右侧「数据统计」一致） -->
+ <aside class="col-side" id="monthAside" data-page-node-id="CLz9tcKVCMEVWXD5WIA5Je">
+
+  <section class="card" id="monthSection" data-page-node-id="IdKMD6C43mtFDR5lSiZqls">
+    <div class="card-h" data-page-node-id="HufKUXLv3530O1Qy0dS7Hy">
+      <h2 data-page-node-id="B59GFDHZX9b1XT6Koef4p2">
+        <svg viewBox="0 0 24 24" data-page-node-id="zgvmXxkmAdS8RtQnMO2kzO"><rect x="3" y="5" width="18" height="16" rx="2" data-page-node-id="JcXFwTCq15XDlWGNkbWmyw"/><line x1="3" y1="10" x2="21" y2="10" data-page-node-id="FnvXuqWtzTi7loFmJArm7T"/><line x1="8" y1="14" x2="8" y2="18" data-page-node-id="TIs74VNopJDqs9qNMoTpvy"/><line x1="13" y1="12" x2="13" y2="18" data-page-node-id="uO0XsXCGHh7hkTBrM6wCY2"/><line x1="18" y1="16" x2="18" y2="18" data-page-node-id="NLN9HgyeghqH2vvzt3Prrj"/></svg>
+        月度统计
+      </h2>
+      <span class="badge" id="monthBadge" data-page-node-id="pgKGk9nedzcVXFqchh7j9k">按接单月</span>
+    </div>
+    <div class="hintline" data-page-node-id="troxPhPjVvAYWt4GbLDWIM">按<b data-page-node-id="hUCDDzsCnu55gdqedclAW0">接单月</b>汇总：<b data-page-node-id="HxZ8h1eu7chlZKT986zvBV">订单总数</b> = 这个月接了多少单；<b data-page-node-id="rMLuUH9DmOHTyaPlgQ7YE7">下单单数 / 提成 / 扣款</b> 都按「更新日期（下单日期）」归月，不看接单时间，退单不算。点表格行或柱体只看那个月。</div>
+    <div class="kpis m-kpis" data-page-node-id="lzSJmSMZ7klVuTAEfRaZ9q">
+      <div class="kpi" data-page-node-id="Ksl7DbNIamFpAoR3WxHhCb"><b data-m="mtotal" data-page-node-id="7BEezzldTj8Yw2MXm0QKlZ">0</b><span data-page-node-id="7JCc2qVZeu8OFKGxnA2jVR">订单总数</span></div>
+      <div class="kpi" data-page-node-id="KPbe7HBDF4E8Nl5Yufb2uz"><b data-m="mordered" data-page-node-id="wS6mkGX8X7x7DpRSnuCRuM">0</b><span data-page-node-id="YXoSURKo9ptE0hcw6xIDV3">已下单</span></div>
+      <div class="kpi" data-page-node-id="Uw47E1oHCX8hf7KGpNGb3V"><b data-m="mcommission" data-page-node-id="7tMYqWNfSA1AdM8QX7y7M9">¥0</b><span data-page-node-id="q65mP5xFm1DhpvWi7WAflp">提成合计</span></div>
+      <div class="kpi" data-page-node-id="q2rQknkrjribYbA07YcojP"><b data-m="mdeduction" data-page-node-id="bTzgBj3l8LMpLf9GIfRJMC">¥0</b><span data-page-node-id="PR9eOaDk5RxgZdFFZBceff">扣款合计</span></div>
+      <div class="kpi" data-page-node-id="3P8InGFthN5WkmvMpwaZ2H"><b data-m="mnet" data-page-node-id="EexEiffkvAlJ6VH7X6Hed6">¥0</b><span data-page-node-id="MmMEzp1TxEh0rZ9rlpmGaq">净额（提成−扣款）</span></div>
+    </div>
+    <div class="m-scroll" id="monthScroll" data-page-node-id="vI2leyZWKDECzaGYiKrjZW">
+      <div class="m-table" id="monthTable" data-page-node-id="eF1yipuBt3Ddmd6Hvc9z9E"></div>
+    </div>
+    <div class="m-more" id="monthMore" data-page-node-id="3KoFbFiCf0kbA1ACmx5C80">下滑看更多月份 ▾</div>
+    <!-- 月度柱体：净额一排、扣款一排，同排在一条线上横着比，一眼看出哪月净额最高 / 哪月扣款最多 -->
+    <div class="mb-wrap" id="monthBars" data-page-node-id="4lpHX1vIKyTtnTLGRgkZmn">
+      <div class="mb-line net" id="mbLineNet" data-page-node-id="IFimL9rC8IZk1TqrzCrwVM">
+        <span class="mb-tag" id="mbTagNet" data-page-node-id="QjznZuCR9g7eymXETcMimo">净额</span>
+        <div class="mb-axis" id="mbNetAxis" data-page-node-id="Xpzq7OkC7qD9aadCBm5X9Y"></div>
+      </div>
+      <div class="mb-line ded" id="mbLineDed" data-page-node-id="673hfihq3bqnj7ENZE3hFl">
+        <span class="mb-tag" id="mbTagDed" data-page-node-id="nDKjGSeGz4H7eRGxpOjEAf">扣款</span>
+        <div class="mb-axis" id="mbDedAxis" data-page-node-id="VV9J7eqDqqkuFSgonjXgdL"></div>
+      </div>
+      <div class="mb-foot" id="monthBarFoot" data-page-node-id="ufEND29lXS5WA2AVwe8AZ1"></div>
+    </div>
+  </section>
+
+ </aside><!-- /.col-side -->
+
+ <!-- 右侧栏：只放「数据统计」，宽屏时钉在右边不动 -->
+ <aside class="col-side" id="statAside" data-page-node-id="hdhsJNR1Hy8U3oy5fb24qO">
+
+  <!-- 模块三：数据统计（每个阶段页都在） -->
+  <section class="card" id="statSection" data-page-node-id="J4mmrE3Vyqh8A18O1f2sFi">
+    <div class="card-h" data-page-node-id="jNwxWRzsSpelYOHrHKhHKU">
+      <h2 data-page-node-id="BAMHSHEwsn8gg1FRI0Qj5C">
+        <svg viewBox="0 0 24 24" data-page-node-id="g70JqR6FNAI5QadZOM372n"><line x1="12" y1="20" x2="12" y2="10" data-page-node-id="32MaEC2s4W1nQWP2ZYs8ml"/><line x1="18" y1="20" x2="18" y2="4" data-page-node-id="1S3mYZWqBvkDrfTtcyCIbZ"/><line x1="6" y1="20" x2="6" y2="15" data-page-node-id="6kkaL0Ws553FD77ICuLtgP"/></svg>
+        数据统计
+      </h2>
+      <div class="seg" id="statScope" data-page-node-id="HrhFPtl0g07TZ8O7INuC9z">
+        <button data-scope="filtered" class="on" data-page-node-id="TkawCWDRK1XhvM1QZCwNXB">跟随筛选</button>
+        <button data-scope="all" data-page-node-id="MiQeai7MG3EK6Eh8YKYvEq">全部数据</button>
+      </div>
+    </div>
+    <div class="kpis k3" data-page-node-id="jwOUBXEYxXTDQ5NmYSyjee">
+      <button class="kpi" data-go="reset" data-page-node-id="LgbMG1HwaGiF2uaomXrUuT">
+        <b data-stat="total" data-sp-bindable="database" data-sp-database-id="i6JcNHPBKJlxNMX7MIuyWR" data-page-node-id="MCYKeAuEn9QJAesWZCTXwl">0</b>
+        <span data-page-node-id="taxMCv3CD0TkhjZ7vpVhxF">订单总数</span><em id="emTotal" data-page-node-id="UTeHRDTuRDTA1UvoTrByrB"></em>
+      </button>
+      <button class="kpi" data-go="installed" data-page-node-id="Pim6TiHVGi6mLkBG1gC8yh">
+        <b data-stat="installed" data-sp-bindable="database" data-sp-database-id="i6JcNHPBKJlxNMX7MIuyWR" data-page-node-id="NQbEPUy4cPmPR4RTcIzWAx">0</b>
+        <span data-page-node-id="mQhbEcUzevApADSFxyNxHA">已安装完成</span><em id="emInstalled" data-page-node-id="qgUaT9vhz8ZmmBMU7goLIJ"></em>
+      </button>
+      <button class="kpi" data-go="settled" data-page-node-id="rku4EpTpGVFLdyA2IDIszb">
+        <b data-stat="settled" data-sp-bindable="database" data-sp-database-id="i6JcNHPBKJlxNMX7MIuyWR" data-page-node-id="Qwx6B9KGhrTbJjrLAyNVcS">0</b>
+        <span data-page-node-id="HTYnuQFkuxJpIbA9x37kgn">已结清</span><em id="emSettled" data-page-node-id="aR8ccXpytUKN4BLbcHrU4Q"></em>
+      </button>
+    </div>
+    <div class="chart-wrap" id="stageChart" data-page-node-id="WaUaVMHHfQM5XKx3kqcD6b"></div>
+    <div class="hintline" style="margin:6px 0 0" data-page-node-id="BKatSwAUU8Z4uhH4osnmq5">柱子 = 该阶段在当前口径下的单数，<b data-page-node-id="MEby2rLNiIrJ4GUWAlADYR">点柱子可跳到该阶段</b>；选中阶段会高亮描边。</div>
+  </section>
+
+  <!-- 年度统计：跟在「数据统计」下面，口径一致，按接单年汇总 -->
+  <section class="card" id="yearSection" data-page-node-id="eNpxE5L0d10ItpUXL9sEav">
+    <div class="card-h" data-page-node-id="vjTmuC6iSJeFCxa4TyCjnr">
+      <h2 data-page-node-id="BEuA6o6KJzt3CbMvFEBPBU">
+        <svg viewBox="0 0 24 24" data-page-node-id="tR5rCyrijowCTCSwxVz7AI"><line x1="12" y1="20" x2="12" y2="6" data-page-node-id="ZjIRk2Xt7UztyihBNOicB4"/><line x1="7" y1="20" x2="7" y2="11" data-page-node-id="bCZjQn2N2U3CsbTZNFyKgg"/><line x1="17" y1="20" x2="17" y2="13" data-page-node-id="OYtzwfMNH4DFrvoaFMND8f"/></svg>
+        年度统计
+      </h2>
+      <span class="badge" id="yearBadge" data-page-node-id="EeBVgm0Ci7ouod2MZ5JXXQ">按接单年</span>
+    </div>
+    <div class="hintline" data-page-node-id="VXEvPNhysGavlJsWWSCt6p">按<b data-page-node-id="eKup8xBdFkQzetKEwVcpbq">接单年</b>汇总：<b data-page-node-id="sR85r6XUhvfwJOnGLnoaQn">订单总数</b> = 这一年一共接了多少单；<b data-page-node-id="a9Rj4LFKGDnNRN1aAYCFxy">下单单数 / 提成 / 扣款</b> 都按「更新日期（下单日期）」归年，不看接单时间，退单不算。点表格行或按<b data-page-node-id="YBMuqFZdg3NZN9q4ynPFk8">接单年</b>，只看那一年。</div>
+    <div class="kpis m-kpis" data-page-node-id="L4729RsISAq8GLqxYaO35V">
+      <div class="kpi" data-page-node-id="gHxpNjbpek68hBO1RuJrz5"><b data-y="ytotal" data-page-node-id="qSHxoUtRWboIUcxOITUgRF">0</b><span data-page-node-id="td8WLesI4bF00LkRynUsVF">订单总数</span></div>
+      <div class="kpi" data-page-node-id="svbI3F5JAl8cdA5UQdlN6c"><b data-y="yordered" data-page-node-id="Thiv4uK42hUxLm9ItEtGXd">0</b><span data-page-node-id="JfGgBZ1k0xHE7vBGC9GWMD">已下单</span></div>
+      <div class="kpi" data-page-node-id="t2GvGtEEcC0TQ5TEzJi4h7"><b data-y="ycommission" data-page-node-id="Uq6WtTBceBkxNXstnrCxjE">¥0</b><span data-page-node-id="ZSDsSfoEFtIhgXSusKde0w">提成合计</span></div>
+      <div class="kpi" data-page-node-id="VcCfHVCZAwFpT3N5yHEHvZ"><b data-y="ydeduction" data-page-node-id="BbreADyGfmvjhDoC2PR8Lz">¥0</b><span data-page-node-id="hrwPuZz4F8o6rL8wwvlrEa">扣款合计</span></div>
+      <div class="kpi" data-page-node-id="2tACzMHEAIlxxho3QBBeGR"><b data-y="ynet" data-page-node-id="DH0KBMSVz6TfgvL8lESsvv">¥0</b><span data-page-node-id="FbASBUHRKO8IWopbDwzKxU">净额（提成−扣款）</span></div>
+    </div>
+    <div class="m-table" id="yearTable" data-page-node-id="ODGpX29JVHeTgds6bj5XW6"></div>
+
+    <!-- 年度柱体：净额一排、扣款一排 —— 同一排里横着比高低，
+         看哪一年净额最高 / 哪一年扣款最多（两排各用自己的高度尺） -->
+    <div class="mb-wrap" id="yearBars" data-page-node-id="zamQnRzq62jFO3eX2GG9iH">
+      <div class="mb-line net" id="mbYearNet" data-page-node-id="7VgwFRjBJPl760giX1DhDh">
+        <span class="mb-tag" id="mbYearTagNet" data-page-node-id="4qowEbcuOfKzpUEBC3JkGV">净额</span>
+        <div class="mb-axis" id="yNetAxis" data-page-node-id="Bes8r2zdSCWS1mwP5E6fuG"></div>
+      </div>
+      <div class="mb-line ded" id="mbYearDed" data-page-node-id="a5ASRkMMOjneUlpiEocjzm">
+        <span class="mb-tag" id="mbYearTagDed" data-page-node-id="9OhlE9xySS7QNHX0VLjPTv">扣款</span>
+        <div class="mb-axis" id="yDedAxis" data-page-node-id="f4GJNDYxVfP6oEEb2yzhRT"></div>
+      </div>
+      <div class="mb-foot" id="yearBarFoot" data-page-node-id="391ngB3kvR1cEzRcFN6xl6"></div>
+    </div>
+  </section>
+
+ </aside><!-- /.col-side -->
+</main>
+
+<footer data-page-node-id="y6kSisKRvDRQdBwhxl63C0">
+  数据保存在你的资料库数据表《全屋定制订单跟进》中，电脑手机打开同一个链接即自动同步；换设备或清缓存前建议先点「导出」做一次备份。<br data-page-node-id="2BtwPhFwvGqDxbesuQNEiV">
+  <button id="btnSeed" style="color:#8B8073;text-decoration:underline;padding:4px 0;min-height:auto" data-page-node-id="KQpZyWywfKCiuqJZSigUUx">清空示例数据（只删带「示例」标记的，不影响你录入的订单）</button>
+</footer>
+
+<!-- 新增 / 编辑 -->
+<div class="mask" id="mask" data-page-node-id="twNJRuwBPXs1dEiCpRBimD"></div>
+<div class="sheet" id="sheet" data-page-node-id="9dEFH48Nke9r0HWGRNrRBq">
+  <div class="sheet-bar" data-page-node-id="AwqAMziybFNHG7vlQsFfNG"></div>
+  <div class="sheet-h" data-page-node-id="4HoAqMbJ97BUXwhDHTF12Q">
+    <b id="sheetTitle" data-page-node-id="CtzHvvhvSHfbW8cNt7qwnm">新增订单</b>
+    <button class="x" id="sheetClose" aria-label="关闭" data-page-node-id="1joUdApYT6psCiNspCcSx0">
+      <svg viewBox="0 0 24 24" data-page-node-id="KPhmLa3yoJxFHz2zOP77dp"><line x1="18" y1="6" x2="6" y2="18" data-page-node-id="9nmMuqLMoR1DAHbHWDV6cP"/><line x1="6" y1="6" x2="18" y2="18" data-page-node-id="1iC9JRe3GO75F9Wf0U4Iyb"/></svg>
+    </button>
+  </div>
+  <div class="field" data-page-node-id="kp0kCm8Cs3xhaFMzSk6wqz">
+    <label for="f-customer" data-page-node-id="443ZzFT7OIfDc9xfSYP3EY">客户姓名 *</label>
+    <input id="f-customer" name="customer" type="text" placeholder="如：王先生" autocomplete="off" data-page-node-id="LJDCkvGLgWtkurTsCmGNV8">
+  </div>
+  <div class="field" data-page-node-id="jRA5Su9YUAYUe4IgOqGg0D">
+    <label for="f-address" data-page-node-id="Y2RJYoDezG5fVFvvxc3qKt">小区 / 地址</label>
+    <input id="f-address" name="address" type="text" placeholder="如：阳光城 3-1802" autocomplete="off" data-page-node-id="1zI6Dj5yP768Xo7fe53iSt">
+  </div>
+  <div class="grid2" data-page-node-id="Nd4V7pmgbsbo01h3YxCmk0">
+    <div class="field" data-page-node-id="wh7EnH65Ws4WpPbK5szsQA">
+      <label for="f-designer" data-page-node-id="O7FyrOf5F2aitoKGqbQAzF">设计师</label>
+      <input id="f-designer" name="designer" type="text" placeholder="如：张明" autocomplete="off" list="designerList" data-page-node-id="D5qwnpoBvPaCduvCNSmYuw">
+      <datalist id="designerList" data-page-node-id="miHAhQxfQkseMcBei8MNmy"></datalist>
+      <div class="tip" data-page-node-id="6bT9bUxPMtgV5E4ztBxPUr">按这个字段分人统计、分人登录，和销售经理是两拨人。</div>
+    </div>
+    <div class="field" data-page-node-id="SBDGzMfxa4be6cUTiZfvaQ">
+      <label for="f-manager" data-page-node-id="OnoB4rdIuFnaUQR3aA2AFb">区域销售经理</label>
+      <input id="f-manager" name="manager" type="text" placeholder="如：李慧 / 华东一区" autocomplete="off" list="mgrList" data-page-node-id="pDpMk2E4pXEUER3BqLI973">
+      <datalist id="mgrList" data-page-node-id="Yj795nYgl0QZONsMBMs22i"></datalist>
+    </div>
+  </div>
+  <div class="grid3" data-page-node-id="QG9xQfbP4YaHrE5rDXSFqN">
+    <div class="field" data-page-node-id="pOijStYDlNnI1smDr8q6Pj">
+      <label for="f-commission" data-page-node-id="tcq3IPKuPrHHRZ8O6Ueqiv">提成（元）</label>
+      <input id="f-commission" name="commission" type="number" inputmode="numeric" min="0" step="1" placeholder="800" data-page-node-id="ie6P87IbBnFSoGUqhTOIkb">
+    </div>
+    <div class="field" data-page-node-id="YqjmlGs3ToSv29YPPYH0ZE">
+      <label for="f-deduction" data-page-node-id="KsOYJeOZUo6BGIrGqt6deU">补件扣款（元）</label>
+      <input id="f-deduction" name="deduction" type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-page-node-id="BNWYJLDDwAlPQrZlXos0c3">
+    </div>
+    <div class="field" data-page-node-id="olIpOgGzdhz52l7Jhiqvau">
+      <label for="f-rework" data-page-node-id="o2OEeVBjLM2Xbwp28zNvqn">整改扣款（元）</label>
+      <input id="f-rework" name="rework" type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-page-node-id="gnqGn9ofujAzbPsc6T6fqU">
+    </div>
+  </div>
+  <div class="field" data-page-node-id="xjjW2wdAlJYBicY2Uaz9VK"><div class="tip" data-page-node-id="zq8faqp3ucZeAd4dU1CmCl">补件扣款 = 补板/补件产生的扣款，整改扣款 = 返工整改产生的扣款；两项都算进「扣款合计」，净额 = 提成 − 两项之和。</div></div>
+  <div class="field" data-page-node-id="CQ0vaiZZZZFtOB7Cza6lfg">
+    <label for="f-stage" data-page-node-id="AOaDepsS2umFY1qfMbyM4H">当前阶段</label>
+    <select id="f-stage" name="stage" data-page-node-id="i5n7uXPgq2FARjwP37tELR"><option value="" data-page-node-id="QGlOhjxLCJOVSbfzb0QBdP">请选择</option></select>
+    <div class="tip" data-page-node-id="IE6VfEw4g0niXUX2yYE5R3">选好阶段后，下单后会自动跳到该阶段并高亮这条订单。</div>
+  </div>
+  <div class="grid2" data-page-node-id="XUuC5kBk2lWhD5oCAFA7he">
+    <div class="field" data-page-node-id="h6C39XH17RTAjI39T7choZ">
+      <label for="f-orderDate" data-page-node-id="bT8SoKDTL1WiRMCNRqHBEN">接单日期</label>
+      <input id="f-orderDate" name="orderDate" type="date" data-page-node-id="Cqwx1XvB9HL1bvrOCMcsew">
+    </div>
+    <div class="field" data-page-node-id="uvGW1RDywMYYhn4LarJ3nh">
+      <label for="f-followDate" data-page-node-id="EqDS8hyEpKH6pPClPeld10">下次跟进日期</label>
+      <input id="f-followDate" name="followDate" type="date" data-page-node-id="eazffmlwa9F6rEHWQsYjs1">
+    </div>
+  </div>
+  <div class="grid2" data-page-node-id="kqxZ5MzeNNEQ0TCX1pAcOm">
+    <div class="field" data-page-node-id="4Eo13m9DRCZG6gGJ2nYXJH">
+      <label for="f-orderPlacedDate" data-page-node-id="E3cf94F4vBjHMFZ74HtCCN">下单日期</label>
+      <input id="f-orderPlacedDate" name="orderPlacedDate" type="date" data-page-node-id="wsJjR27RvWfC5CF2Bo7lmK">
+    </div>
+    <div class="field" data-page-node-id="cPscRkSnvS9EiQ7lDFrwuh">
+      <label for="f-updateDate" data-page-node-id="OWjFH8muRzSoefuTSylSOs">更新日期</label>
+      <input id="f-updateDate" name="updateDate" type="date" data-page-node-id="ewt6aB8qpvOLOJRc0QssIb">
+      <div class="tip" data-page-node-id="6VyPOl3VsEk9hFB2k0xfBm">每次推进阶段或保存编辑都会自动记成当天。</div>
+    </div>
+  </div>
+  <div class="field" data-page-node-id="ifcAsLaRnCyEcWeuN5luoz">
+    <label for="f-remark" data-page-node-id="PCk6Ab9A2DSkklSv0rdIoA">备注</label>
+    <textarea id="f-remark" name="remark" placeholder="柜体材质、颜色、五金、交付要求…"></textarea>
+    <div class="tip" data-page-node-id="f7QJ0DUesdzydBx2kDlE1c">写「客户要求」「改色」等关键词，下面搜索能直接命中。</div>
+  </div>
+  <div class="sheet-acts" data-page-node-id="5ERHPlW1YSMZb1p2iJSUTw">
+    <button class="btn danger hide" id="btnDelete" data-page-node-id="8Plfy5eSCbhCjj8amcas1s">删除</button>
+    <button class="btn primary" id="btnSave" data-page-node-id="mO4XGknEaDQ9RfDQ3NoJsi">保存</button>
+  </div>
+</div>
+
+<!-- 二次确认 -->
+<div class="mask" id="confirmMask" data-page-node-id="GQNqAxbCpmHkL7FiQ9DW5R"></div>
+<div class="dialog" id="confirmDialog" data-page-node-id="oLGRPLGIkBDj8xika7dzZt">
+  <p id="confirmText" data-page-node-id="HMYVmplBVytr0XQgvtgt1I">确定吗？</p>
+  <div class="row" data-page-node-id="Y0MGsivRVCCR0Te2ejbT0U">
+    <button class="btn" id="confirmNo" data-page-node-id="KWMGfAKjHJftfNkWAXtiDD">取消</button>
+    <button class="btn primary" id="confirmYes" data-page-node-id="1frwe9VPoMPekeZZCHg4W7">确定</button>
+  </div>
+</div>
+
+<!-- 设计师名单管理 -->
+<div class="mask" id="dmMask" data-page-node-id="tQBOTtZJX4cj2MncHydigr"></div>
+<div class="dialog dlg-list" id="dmDialog" role="dialog" aria-modal="true" aria-labelledby="dmTitle" data-page-node-id="GaswiSNyal7hHEohJcxoQH">
+  <b class="dlg-title" id="dmTitle" data-page-node-id="d6PWGrBMwyRu98IxCLmcAO">设计师名单</b>
+  <p class="dlg-sub" data-page-node-id="GdEAWaxQkVQC46v6pFtIF4">录单时从这个名单里选人，避免「张明 / 张 明」两种写法把统计拆散。订单里出现过但没在名单中的人，会自动出现在身份下拉里。</p>
+  <ul class="dm-list" id="dmList" data-page-node-id="TMEsis1MGXkYOnVdBiPivi"></ul>
+  <div class="dm-add" data-page-node-id="dxFcINWf0VU5BLPzcnFUe5">
+    <input id="dmInput" type="text" placeholder="输入设计师名字" autocomplete="off" maxlength="20" data-page-node-id="G5HNnTKAu6y1nVxFaiOJ5O">
+    <button class="btn sm primary" id="dmAdd" data-page-node-id="ru7YQaKS2SWi28lcNlrAL1">添加</button>
+  </div>
+  <div class="row dm-foot" data-page-node-id="okFMFhPQIq0Hws1vXmWK1j">
+    <button class="btn" id="dmClose" data-page-node-id="dunIQCEDa2GWq6JQ2RkHmq">完成</button>
+  </div>
+</div>
+
+<!-- 账号管理（仅老板可见） -->
+<div class="mask" id="acMask" data-page-node-id="wQCrkb3FM8VFpgE3cf17j2"></div>
+<div class="dialog dlg-list" id="acDialog" role="dialog" aria-modal="true" aria-labelledby="acTitle" data-page-node-id="PON3IAZnItF4DL5BPfo0OX">
+  <b class="dlg-title" id="acTitle" data-page-node-id="NjxPfzB6JU6m6HCloR6yPe">账号管理</b>
+  <p class="dlg-sub" data-page-node-id="5mCEvq7lxue2TTWY93MOb9">老板可以改角色、重置别人的密码、删除账号。不能删自己，也不能把最后一个老板降成设计师。</p>
+  <div class="sync-tip hide" id="acSyncTip" data-page-node-id="cSAfmroCjDsaVrTHWNBROf"></div>
+  <ul class="dm-list" id="acList" data-page-node-id="ya0jnQgXeDTiOewc3paUXJ"></ul>
+  <div class="row dm-foot" data-page-node-id="BOOvP7CErkr94lNoip7ODV">
+    <button class="btn sm primary" id="acResync" data-page-node-id="acBtnResyncNode01">重新同步到云端</button>
+    <button class="btn" id="acClose" data-page-node-id="d3HPjXukOLbvJALa4OHpt3">完成</button>
+  </div>
+</div>
+
+<!-- 登录 / 注册门：没登录就看不到任何订单 -->
+<div class="auth" id="authGate" data-page-node-id="CtuxTOvjbteS07xBzyIge5">
+  <div class="auth-box" data-page-node-id="wMXTgy1g8HakyZCoHC1CuP">
+    <div class="auth-head" data-page-node-id="n2UrtiYHSxuG4pbwP5r9Wc">
+      <span class="auth-logo" aria-hidden="true" data-page-node-id="NfCzLmS9by3EXtXhQbUAtw"><svg viewBox="0 0 24 24" data-page-node-id="DJCs6M4u3GuNS1uMnhBthQ"><path d="M4 20V6l8-2v16" data-page-node-id="8GuXmjo6TBHBpLMt5ARBdI"/><path d="M12 8h8v12H12" data-page-node-id="yIqSbDoIhDjhhxT87qoowS"/><path d="M8 10v8M16 12v6" data-page-node-id="ansa1BP60zFuIZHJncwsFU"/></svg></span>
+      <b class="auth-title" data-page-node-id="Ook8mMVjVsZ7yqrdHHT2ME">定制衣柜 · 订单跟进台</b>
+      <span class="auth-sub" data-page-node-id="4weF0nmg6wvDY6Ks7IDeRt">登录后才能看到订单和业绩</span>
+    </div>
+    <div class="offline-bar hide" id="offlineBar" data-page-node-id="obBarNodeOffline"></div>
+
+    <div id="authLogin" data-page-node-id="zmpByuOyujXMsW3JcEbt85">
+      <div class="field" data-page-node-id="LTZhxzCUobmdQGExjPReGv">
+        <label for="auUser" data-page-node-id="oZI0flIOS9BV0t2w81rjGD">用户名</label>
+        <input id="auUser" type="text" autocomplete="username" placeholder="手机号或姓名" data-page-node-id="IVFZWeoFWf2uBgCQc0B2aW">
+      </div>
+      <div class="field" data-page-node-id="7i9bPaFpwQLVlSZK12mHCT">
+        <label for="auPwd" data-page-node-id="m9OrqxNSYMmFcF5baLowgG">密码</label>
+        <input id="auPwd" type="password" autocomplete="current-password" placeholder="请输入密码" data-page-node-id="0l5HKGtpe0eddUGIxC2VZl">
+      </div>
+      <button class="btn primary" id="auLogin" data-page-node-id="vIXMTTv60E8cbAy1tmFjKw">登录</button>
+      <div class="auth-sw" data-page-node-id="oKq4zvmnDvbajwBdf9jVSR">还没有账号？<button class="linkbtn" id="auGoReg" data-page-node-id="yzEJoFx6txQQOT2iGFgOkw">注册设计师账号</button></div>
+    </div>
+
+    <div id="authReg" class="hide" data-page-node-id="ZGh7nmiCWUBau4R4BJQRf2">
+      <div class="field" data-page-node-id="8CHQsvBJXKTDRZWG0b0IQz">
+        <label for="ruUser" data-page-node-id="wBi0TmtQfJ60m71cbbZTqw">用户名（登录用）</label>
+        <input id="ruUser" type="text" autocomplete="username" placeholder="如：zhangming / 13800000000" data-page-node-id="3GgIwIKI16lnYuRzDcwk06">
+      </div>
+      <div class="field" data-page-node-id="KBwhrCzOB2GcIDRNCXiTm3">
+        <label for="ruName" data-page-node-id="kQkzMiSZBFRJ7BaHJnCtFm">姓名（订单上的设计师名字）</label>
+        <input id="ruName" type="text" autocomplete="off" placeholder="如：张明" data-page-node-id="3ChdH2iJnfrFuRj56s71wl">
+      </div>
+      <div class="field" data-page-node-id="HxLylsC5ZEd5xLZEpH1Bzc">
+        <label for="ruPwd" data-page-node-id="8jal7sREo6ErmhLJLJJff1">密码</label>
+        <input id="ruPwd" type="password" autocomplete="new-password" placeholder="6 位以上" data-page-node-id="JmgFGRTCzAi8CzkUulCGXW">
+      </div>
+      <div class="field" data-page-node-id="4vWIegeEy6y8ahrM42H4Hj">
+        <label for="ruPwd2" data-page-node-id="tqb5ua1ceQEd2mp2i6RDhy">确认密码</label>
+        <input id="ruPwd2" type="password" autocomplete="new-password" placeholder="再输一次" data-page-node-id="D0hWcEqisKngH8HsOjYcZM">
+      </div>
+      <button class="btn primary" id="ruReg" data-page-node-id="st31m4yR7FFZStUKjGw4mQ">注册并登录</button>
+      <div class="auth-sw" data-page-node-id="tL7xT17a5xmN2uBNqqykof">已有账号？<button class="linkbtn" id="auGoLogin" data-page-node-id="vWNFKIJG2GfAN4v5DdLsPY">返回登录</button></div>
+    </div>
+
+    <p class="auth-tip" id="authTip" data-page-node-id="o0uIbv5cp8fGjUytKnA9za"></p>
+    <div class="sync-tip hide" id="accSyncTip" data-page-node-id="aECXjVroEewdsHTCdOvUBR"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-page-node-id="xCla4oonD7RxrLgMcvqu29"></div>
+
+<script>
+/* =========================================================
+   定制衣柜 · 订单跟进台
+   数据层：资料库数据表 (window.__SMART_PAGE__.database)
+   无 SDK 环境（本地离线打开）自动降级为 localStorage
+   —— 所有模块（今天要处理 / 订单列表 / 统计）共用同一份 state，
+      任何一次操作都会联动刷新其余模块
+   ========================================================= */
+(function () {
+  'use strict';
+
+  var DATABASE_ID = 'i6JcNHPBKJlxNMX7MIuyWR';
+  var STAGES = [
+    { name: '新增订单', color: '#8A7BF0' },
+    { name: '已测量',   color: '#3E8FE0' },
+    { name: '出图中',   color: '#E08A1E' },
+    { name: '已出图',   color: '#2FA08A' },
+    { name: '已复尺',   color: '#D9653F' },
+    { name: '待确认',   color: '#9A6BD6' },
+    { name: '已下单',   color: '#BE9426' },
+    { name: '已安装',   color: '#4B9E5F' },
+    { name: '已结清',   color: '#5B7FB8' },
+    { name: '退单',     color: '#C0392B' }
+  ];
+  var FLOW_END = 8;   // 主流程最后一环「已安装」的下标：之下是「已结清」「退单」两个终态
+  var DONE_STAGES = ['已安装', '已结清', '退单'];   // 已终结、不参与「今天要处理」
+  var ORDERED_AT = 6; // 「已下单」的下标：到了这个阶段及之后（已下单/已安装/已结清）才算「下单单数」
+  // 「未下单」不是真实阶段，而是「已下单」之前所有阶段的合并口径：
+  // 新增订单 + 已测量 + 出图中 + 已出图 + 已复尺 + 待确认
+  var PRE_KEY = '__preorder__';
+  var PRE_NAME = '未下单';
+  var PRE_STAGES = STAGES.slice(0, ORDERED_AT);   // 这 6 个阶段合起来 = 未下单
+  var LS_KEY = 'wb_wardrobe_orders_v1';
+  var UI_KEY = 'wb_wardrobe_ui_v1';
+  var TITLE_KEY = 'wb_wardrobe_title_v1';
+  var TITLE_DEFAULT = '定制衣柜 · 订单跟进';
+  // 云端「工作台设置」表（只存标题等页面自定义文案，不存订单）：
+  var SET_DB_ID = 'zJgP7lBJpKEFlp8IDbNyeO';
+  // 注意：SDK 规范要求调用处 databaseId 必须写字面量，故下面几处直接用字符串而非 SET_DB_ID。
+
+  var sdk = (window.__SMART_PAGE__ && window.__SMART_PAGE__.database) ? window.__SMART_PAGE__.database : null;
+  var HAS_DB = !!sdk;
+
+  /* ---------------- 唯一数据源 ---------------- */
+  var state = {
+    rows: [],
+    stage: '',            // '' = 全部 | '__active__' | 阶段名
+    kw: '',
+    year: '',             // '' = 全部年份 | 'YYYY'，按接单年筛
+    month: '',            // '' = 全部月份 | 'YYYY-MM'，按接单月筛
+    sortKey: 'follow',    // follow | order | amount
+    sortDir: 'asc',
+    statScope: 'filtered',// filtered | all
+    todayScope: 'filtered',// filtered | all
+    focusId: '',
+    editId: '',
+    designers: [],        // 设计师名单（固定名单，录单时下拉选，避免同名写法拆散统计）
+    owner: '',            // '' = 全部（老板视角）| 具体人名 = 只看该设计师的订单
+    accounts: [],         // 账号表（云端设置库「账号表」∪ localStorage）
+    me: null,             // 当前登录者 { u, name, role:'boss'|'designer' }；null = 未登录
+    accSync: '',          // 账号云同步状态：'' 未知 | ok 已上云 | fail 只在本地 | local 离线模式
+    accFail: ''           // 同步失败的原因：'' 无 | login 浏览器没登录 WorkBuddy | other 其他
+  };
+  var SCHEMA_OPTIONS = {};
+  var UI_SAVED = { sort: '', month: '' };
+
+  /* ---------------- 工具 ---------------- */
+  function $(sel) { return document.querySelector(sel); }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+  function bind(node) {
+    node.setAttribute('data-sp-bindable', 'database');
+    node.setAttribute('data-sp-database-id', DATABASE_ID);
+    return node;
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function dayOnly(v) {
+    if (!v) return '';
+    var s = String(v);
+    return s.indexOf('T') > -1 ? s.split('T')[0] : s;
+  }
+  function dayDiff(a, b) {
+    if (!a || !b) return 0;
+    var x = Date.UTC(a.slice(0, 4) * 1, a.slice(5, 7) * 1 - 1, a.slice(8, 10) * 1);
+    var y = Date.UTC(b.slice(0, 4) * 1, b.slice(5, 7) * 1 - 1, b.slice(8, 10) * 1);
+    return Math.round((x - y) / 86400000);
+  }
+  function prettyDate(v) {
+    var s = dayOnly(v);
+    if (!s) return '';
+    return s.slice(5, 7) + '月' + s.slice(8, 10) + '日';
+  }
+  function money(n) {
+    var v = Number(n || 0);
+    return '¥' + v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  function esc(s) { return String(s === undefined || s === null ? '' : s); }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+  /**
+   * 一笔订单的总扣款 = 补件扣款 + 整改扣款。
+   * 老数据里只有「扣款」这一列（改名前的），自动按补件扣款读，避免改字段名后数字归零。
+   */
+  // 改名前的老列名「扣款」，现在只当兼容用：老数据里这一列的值等价于「补件扣款」
+  var LEGACY_DED = '' + '扣款';
+  function rework(r) { return num(r['整改扣款']); }
+  function deductionOf(r) {
+    var hasNew = r['补件扣款'] !== undefined && r['补件扣款'] !== null && String(r['补件扣款']) !== '';
+    if (hasNew || rework(r)) return num(r['补件扣款']) + rework(r);
+    return num(r[LEGACY_DED]);      // 旧字段兜底
+  }
+  /** 卡片 / 详情上要逐项显示的扣款，形如 ['补件扣款 ¥200', '整改扣款 ¥120'] */
+  function deductionParts(r) {
+    var out = [], i;
+    var keys = ['补件扣款', '整改扣款'];
+    for (i = 0; i < keys.length; i++) {
+      var v = r[keys[i]];
+      if (v !== undefined && v !== null && String(v) !== '') out.push(keys[i] + ' ' + money(v));
+    }
+    if (!out.length && (r[LEGACY_DED] !== undefined && r[LEGACY_DED] !== null && String(r[LEGACY_DED]) !== '')) out.push('扣款 ' + money(r[LEGACY_DED]));
+    return out;
+  }
+  /** 详情里逐项显示补件 / 整改扣款：老数据只有「扣款」时，把它当作补件扣款 */
+  function reworkDetailVal(r, key) {
+    var v = r[key];
+    if (v === undefined || v === null || String(v) === '') {
+      if (key === '补件扣款' && String(r[LEGACY_DED] || '') !== '') return money(r[LEGACY_DED]) + '（旧字段）';
+      return '—';
+    }
+    return money(v);
+  }
+  function stageColor(name) {
+    for (var i = 0; i < STAGES.length; i++) if (STAGES[i].name === name) return STAGES[i].color;
+    return '#8B8073';
+  }
+  function stageIndex(name) {
+    for (var i = 0; i < STAGES.length; i++) if (STAGES[i].name === name) return i;
+    return -1;
+  }
+  function optionIdByText(text) {
+    var opts = SCHEMA_OPTIONS['阶段'] || [];
+    for (var i = 0; i < opts.length; i++) if (opts[i].text === text) return opts[i].id;
+    return '';
+  }
+  function newId() { return 'loc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function findRow(id) {
+    for (var i = 0; i < state.rows.length; i++) if (state.rows[i]._id === id) return state.rows[i];
+    return null;
+  }
+
+  /* ---------- 关键词高亮 ---------- */
+  function hlNode(text) {
+    var frag = document.createDocumentFragment();
+    var s = String(text === undefined || text === null ? '' : text);
+    var kw = state.kw.trim().toLowerCase();
+    if (!kw) { frag.appendChild(document.createTextNode(s)); return frag; }
+    var low = s.toLowerCase(), i = 0, idx;
+    while ((idx = low.indexOf(kw, i)) > -1) {
+      if (idx > i) frag.appendChild(document.createTextNode(s.slice(i, idx)));
+      var m = document.createElement('mark');
+      m.textContent = s.slice(idx, idx + kw.length);
+      frag.appendChild(m);
+      i = idx + kw.length;
+    }
+    frag.appendChild(document.createTextNode(s.slice(i)));
+    return frag;
+  }
+  function hlInto(node, text) { node.appendChild(hlNode(text)); return node; }
+
+  /* ---------------- 提示 / 确认 ---------------- */
+  var toastTimer = null;
+  function toast(msg, ms) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('on'); }, ms || 1900);
+  }
+  var confirmCb = null;
+  function askConfirm(text, okText, cb) {
+    $('#confirmText').textContent = text;
+    $('#confirmYes').textContent = okText || '确定';
+    confirmCb = cb;
+    $('#confirmMask').classList.add('on');
+    $('#confirmDialog').classList.add('on');
+  }
+  function closeConfirm() {
+    $('#confirmMask').classList.remove('on');
+    $('#confirmDialog').classList.remove('on');
+    confirmCb = null;
+  }
+  $('#confirmNo').addEventListener('click', closeConfirm);
+  $('#confirmMask').addEventListener('click', closeConfirm);
+  $('#confirmYes').addEventListener('click', function () {
+    var cb = confirmCb;
+    closeConfirm();
+    if (typeof cb === 'function') cb();
+  });
+
+  /* ---------------- 降级存储 ---------------- */
+  function LocalStore() {
+    var rows = [];
+    try { rows = JSON.parse(window.localStorage.getItem(LS_KEY) || 'null') || []; } catch (e) { rows = []; }
+    if (!rows.length) {
+      rows = seedRecords();
+      try { window.localStorage.setItem(LS_KEY, JSON.stringify(rows)); } catch (e2) {}
+    }
+    function save() { try { window.localStorage.setItem(LS_KEY, JSON.stringify(rows)); } catch (e) {} }
+
+    // 与线上 SDK 对齐：select 存取「选项文字」，内部用选项 id 当值
+    var stageOpts = STAGES.map(function (s, i) { return { id: 'local_stage_' + i, text: s.name }; });
+    function unwrap(v) {
+      if (!v || typeof v !== 'object') return v;
+      var ks = Object.keys(v);
+      if (!ks.length) return v;
+      var type = ks[0], val = v[type];
+      if (type === 'select') {
+        if (!val) return '';
+        for (var i = 0; i < stageOpts.length; i++) if (stageOpts[i].id === val) return stageOpts[i].text;
+        return val;
+      }
+      return val;
+    }
+    return {
+      getSchema: function () {
+        return Promise.resolve({
+          id: DATABASE_ID, title: '全屋定制订单跟进',
+          properties: [
+            { id: 'p1', name: '客户姓名', type: 'text' },
+            { id: 'p2', name: '阶段', type: 'select', config: { options: stageOpts } },
+            { id: 'p3', name: '联系电话', type: 'text' },
+            { id: 'p4', name: '小区地址', type: 'text' },
+            { id: 'p5', name: '金额', type: 'currency', config: {} },
+            { id: 'p6', name: '接单日期', type: 'date' },
+            { id: 'p7', name: '跟进日期', type: 'date' },
+            { id: 'p8', name: '备注', type: 'text' },
+            { id: 'p9', name: '示例数据', type: 'checkbox' },
+            { id: 'p10', name: '区域销售经理', type: 'text' },
+            { id: 'p14', name: '设计师', type: 'text' },
+            { id: 'p11', name: '提成', type: 'currency', config: {} },
+            { id: 'p12', name: '补件扣款', type: 'currency', config: {} },
+            { id: 'p13', name: '整改扣款', type: 'currency', config: {} }
+          ]
+        });
+      },
+      query: function (p) {
+        var size = p.pageSize || 50;
+        var start = p.startCursor ? parseInt(p.startCursor, 10) : 0;
+        var page = rows.slice(start, start + size);
+        var next = start + size;
+        return Promise.resolve({ results: page, nextCursor: String(next), hasMore: next < rows.length });
+      },
+      addRecord: function (p) {
+        var row = { _id: newId() };
+        Object.keys(p.properties).forEach(function (k) { row[k] = unwrap(p.properties[k]); });
+        rows.unshift(row); save();
+        return Promise.resolve({ id: row._id });
+      },
+      updateRecord: function (p) {
+        for (var i = 0; i < rows.length; i++) {
+          if (rows[i]._id === p.recordId) {
+            Object.keys(p.properties).forEach(function (k) { rows[i][k] = unwrap(p.properties[k]); });
+            save(); break;
+          }
+        }
+        return Promise.resolve({ id: p.recordId });
+      },
+      deleteRecord: function (p) {
+        rows = rows.filter(function (r) { return r._id !== p.recordId; });
+        save();
+        return Promise.resolve({});
+      },
+      aggregate: function (p) {
+        var out = [];
+        (p.aggregates || []).forEach(function (a) {
+          if (a.name === 'installed') out.push({ name: a.name, value: rows.filter(function (r) { return r['阶段'] === '已安装'; }).length });
+          else if (a.name === 'pending') out.push({ name: a.name, value: rows.filter(function (r) { return r['阶段'] !== '已安装'; }).length });
+          else if (a.name === 'amount_sum') out.push({ name: a.name, value: rows.reduce(function (s, r) { return s + Number(r['金额'] || 0); }, 0) });
+          else if (a.type === 'count' && a.groupBy) {
+            var m = {};
+            rows.forEach(function (r) { var k = r[a.groupBy] || '未填写'; m[k] = (m[k] || 0) + 1; });
+            out.push({ name: a.name, value: Object.keys(m).map(function (k) { return { key: k, count: m[k] }; }) });
+          } else out.push({ name: a.name, value: rows.length });
+        });
+        return Promise.resolve({ results: out });
+      },
+      onUpdated: function () {}
+    };
+  }
+  function seedRecords() {
+    var d = new Date();
+    function off(n) { var x = new Date(d.getTime() + n * 86400000); return x.getFullYear() + '-' + pad(x.getMonth() + 1) + '-' + pad(x.getDate()); }
+    // 接单日期跨 3 个月、跨 2025/2026 两年，方便直接看到「月度统计」和「年度统计」的表格
+    return [
+      { _id: newId(), '客户姓名': '示例·王先生', '阶段': '出图中', '联系电话': '13800001111', '小区地址': '示例·阳光城 3-1802', '金额': 18600, '设计师': '张明', '区域销售经理': '华东一区', '提成': 1200, '补件扣款': 200, '整改扣款': 120, '接单日期': off(-8), '跟进日期': off(-2), '备注': '示例数据：主卧衣柜 + 玄关柜，哑光白', '示例数据': true },
+      { _id: newId(), '客户姓名': '示例·李女士', '阶段': '已测量', '联系电话': '13900002222', '小区地址': '示例·翡翠湾 12-601', '金额': 24500, '设计师': '张明', '区域销售经理': '华东一区', '提成': 1800, '补件扣款': 0, '整改扣款': 0, '接单日期': off(-21), '跟进日期': off(0), '备注': '示例数据：整墙书柜，需上门初测', '示例数据': true },
+      { _id: newId(), '客户姓名': '示例·陈先生', '阶段': '已复尺', '联系电话': '13700003333', '小区地址': '示例·锦绣家园 8-1203', '金额': 31200, '设计师': '李慧', '区域销售经理': '华南二区', '提成': 2400, '补件扣款': 500, '整改扣款': 0, '接单日期': off(-44), '跟进日期': off(1), '备注': '示例数据：出图已确认，待水电完工复尺', '示例数据': true },
+      { _id: newId(), '客户姓名': '示例·待确认客户', '阶段': '待确认', '联系电话': '13800009999', '小区地址': '示例·中央公园 6-802', '金额': 26800, '设计师': '张明', '区域销售经理': '华东一区', '提成': 1500, '补件扣款': 0, '整改扣款': 0, '接单日期': off(-30), '跟进日期': off(2), '备注': '示例数据：图纸已出，等客户确认下单', '示例数据': true },
+      { _id: newId(), '客户姓名': '示例·赵女士', '阶段': '已安装', '联系电话': '13600004444', '小区地址': '示例·云顶小区 5-902', '金额': 15800, '设计师': '李慧', '区域销售经理': '华南二区', '提成': 950, '补件扣款': 0, '整改扣款': 0, '接单日期': off(-74), '跟进日期': off(12), '备注': '示例数据：已下单生产，货期 25 天', '示例数据': true },
+      { _id: newId(), '客户姓名': '示例·周先生', '阶段': '新增订单', '联系电话': '13500005555', '小区地址': '示例·半山壹号 2-1101', '金额': 42000, '设计师': '张明', '区域销售经理': '华东一区', '提成': 0, '补件扣款': 0, '整改扣款': 0, '接单日期': off(0), '跟进日期': off(3), '备注': '示例数据：全屋定制，待约初测', '示例数据': true },
+      { _id: newId(), '客户姓名': '示例·孙女士', '阶段': '已结清', '联系电话': '13400006666', '小区地址': '示例·江畔人家 7-1503', '金额': 22600, '设计师': '李慧', '区域销售经理': '华南二区', '提成': 1600, '补件扣款': 300, '整改扣款': 180, '接单日期': '2025-09-10', '跟进日期': '2025-11-20', '备注': '示例数据：全屋柜类完成，尾款已收清（去年的单）', '示例数据': true }
+    ];
+  }
+  var db = HAS_DB ? sdk : LocalStore();
+
+  /* ---------------- 数据层 ---------------- */
+  function readRecords(cursor, acc, guard) {
+    acc = acc || []; guard = guard || 0;
+    if (guard > 100) return Promise.resolve(acc);
+    return db.query({ databaseId: DATABASE_ID, pageSize: 200, startCursor: cursor })
+      .then(function (r) {
+        var page = (r && r.results) || [];
+        acc = acc.concat(page);
+        var next = r && r.nextCursor;
+        if (r && r.hasMore && next && next !== cursor && page.length) return readRecords(next, acc, guard + 1);
+        return acc;
+      })
+      .catch(function (err) { console.error('[order] 分页读取中断:', err); return acc; });
+  }
+  function loadData() {
+    setSync('syncing');
+    return readRecords()
+      .then(function (rows) {
+        state.rows = rows;
+        renderOwnerBar();   // 订单里可能冒出名单里没有的设计师，顺手补进身份下拉
+        refreshAll();
+        setSync(HAS_DB ? 'online' : 'local');
+      })
+      .catch(function (err) {
+        console.error('[order] 数据加载失败:', err);
+        setSync('offline');
+        toast('数据加载失败，请刷新重试');
+      });
+  }
+  function setSync(mode) {
+    var badge = $('#syncBadge'), txt = $('#syncText');
+    if (mode === 'online') { badge.classList.remove('off'); txt.textContent = '资料库已同步'; }
+    else if (mode === 'syncing') { badge.classList.remove('off'); txt.textContent = '同步中…'; }
+    else if (mode === 'local') { badge.classList.add('off'); txt.textContent = '本地模式（未连资料库）'; }
+    else { badge.classList.add('off'); txt.textContent = '未同步（离线）'; }
+  }
+  function saveRecord(props, id) {
+    setSync('syncing');
+    function fail(err) {
+      console.error('[order] 保存失败:', err);
+      setSync('offline');
+      return Promise.reject(err);
+    }
+    if (id) {
+      return db.updateRecord({ databaseId: DATABASE_ID, recordId: id, properties: props })
+        .then(function () { toast('已更新'); return loadData().then(function () { return id; }); })
+        .catch(fail);
+    }
+    return db.addRecord({ databaseId: DATABASE_ID, properties: props })
+      .then(function (rsp) { toast('订单已新增'); return loadData().then(function () { return (rsp && (rsp.id || rsp.recordId)) || null; }); })
+      .catch(fail);
+  }
+  function removeRecord(id) {
+    setSync('syncing');
+    return db.deleteRecord({ databaseId: DATABASE_ID, recordId: id })
+      .then(function () { toast('已删除'); return loadData(); })
+      .catch(function (err) {
+        console.error('[order] 删除失败:', err);
+        setSync('offline');
+        return Promise.reject(err);
+      });
+  }
+
+  /* ---------------- 顶部标题：可自由改（店名 / 设计师名字） ---------------- */
+  function plainTitle(v) { return String(v === undefined || v === null ? '' : v).replace(/\s+/g, ' ').trim(); }
+  function applyTitle(t) {
+    t = plainTitle(t) || TITLE_DEFAULT;
+    var h = $('#appTitle');
+    if (h) h.textContent = t;
+    try { document.title = t; } catch (e) {}
+    var ap = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (ap) ap.setAttribute('content', t);
+    return t;
+  }
+  function lsGetTitle() { try { return plainTitle(window.localStorage.getItem(TITLE_KEY)); } catch (e) { return ''; } }
+  function lsSetTitle(t) { try { window.localStorage.setItem(TITLE_KEY, plainTitle(t)); } catch (e) {} }
+  function cloudTitleRec() {
+    if (!HAS_DB || !SET_DB_ID) return Promise.resolve(null);
+    return db.query({ databaseId: 'zJgP7lBJpKEFlp8IDbNyeO', pageSize: 1 })
+      .then(function (r) {
+        var arr = r ? r.results : null;
+        return (arr && arr[0]) ? arr[0] : null;
+      })
+      .catch(function () { return null; });
+  }
+  function propText(v) { return v === undefined || v === null || v === '' ? '' : (typeof v === 'string' ? v : plainTitle(v.text)); }
+  function cloudSaveTitle(t) {
+    if (!HAS_DB || !SET_DB_ID) return Promise.resolve();
+    var props = { '标题': { text: t }, '更新时间': { date: todayISO() } };
+    return cloudTitleRec().then(function (rec) {
+      if (rec && rec['_id']) return db.updateRecord({ databaseId: 'zJgP7lBJpKEFlp8IDbNyeO', recordId: rec['_id'], properties: props });
+      return db.addRecord({ databaseId: 'zJgP7lBJpKEFlp8IDbNyeO', properties: props });
+    }).catch(function (err) { console.error('[order] 标题云同步失败:', err); });
+  }
+  function bindTitleEdit() {
+    var h = $('#appTitle');
+    if (!h) return;
+    function editing() { return h.getAttribute('contenteditable') === 'true'; }
+    function finish(ok) {
+      if (!editing()) return;
+      h.removeAttribute('contenteditable');
+      h.classList.remove('editing');
+      var v = plainTitle(h.textContent);
+      if (ok && v) { lsSetTitle(v); applyTitle(v); cloudSaveTitle(v); toast('已改名为：' + v); }
+      else applyTitle(lsGetTitle() || TITLE_DEFAULT);
+      try { h.blur(); } catch (e) {}
+    }
+    h.addEventListener('click', function () {
+      if (editing()) return;
+      h.setAttribute('contenteditable', 'true');
+      h.classList.add('editing');
+      try { h.focus(); } catch (e) {}
+      try {
+        var rg = document.createRange();
+        rg.selectNodeContents(h);
+        var sl = window.getSelection();
+        sl.removeAllRanges();
+        sl.addRange(rg);
+      } catch (e2) {}
+    });
+    h.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+    h.addEventListener('blur', function () { finish(true); });
+  }
+  function restoreTitle() {
+    var local = lsGetTitle() || TITLE_DEFAULT;
+    applyTitle(local);
+    bindTitleEdit();
+    cloudTitleRec().then(function (rec) {
+      var v = propText(rec && rec['标题']);
+      if (v && v !== local) { lsSetTitle(v); applyTitle(v); }
+    });
+  }
+
+  /* =======================================================
+     设计师名单 + 「当前身份」（多设计师共用一个页面）
+     - 名单 = 固定名单（云端设置表 ∪ localStorage）∪ 订单里出现过的人名（老数据零迁移）
+     - owner = '' → 老板视角，看全部；= 某个人名 → 以该设计师身份进入，只看自己的单
+     - 身份是「我是谁」，要记住（下次打开还是同一个人）；月份 / 年份筛选才是不记住的
+     ======================================================= */
+  var DESIGNER_KEY = 'wb_wardrobe_designers_v1';
+  var OWNER_KEY = 'wb_wardrobe_owner_v1';
+
+  function normName(v) { return String(v === undefined || v === null ? '' : v).replace(/\s+/g, ' ').trim(); }
+  function lsGetDesigners() {
+    try {
+      var raw = window.localStorage.getItem(DESIGNER_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.map(normName).filter(Boolean) : [];
+    } catch (e) { return []; }
+  }
+  function lsSetDesigners(arr) { try { window.localStorage.setItem(DESIGNER_KEY, JSON.stringify(arr || [])); } catch (e) {} }
+  function lsGetOwner() { try { return normName(window.localStorage.getItem(OWNER_KEY)); } catch (e) { return ''; } }
+  function lsSetOwner(v) { try { window.localStorage.setItem(OWNER_KEY, normName(v)); } catch (e) {} }
+
+  /** 订单里实际出现过的设计师（老数据自动进池，不用手工补录） */
+  function designersFromRows() {
+    var seen = {};
+    state.rows.forEach(function (r) { var n = normName(r['设计师']); if (n) seen[n] = 1; });
+    return Object.keys(seen);
+  }
+  /** 最终名单 = 固定名单 ∪ 订单里出现过的，去重后稳定排序 */
+  function mergeDesigners() {
+    var seen = {}, out = [];
+    state.designers.concat(designersFromRows()).forEach(function (n) {
+      n = normName(n);
+      if (!n || seen[n]) return;
+      seen[n] = 1; out.push(n);
+    });
+    out.sort(function (a, b) { return a.localeCompare(b, 'zh-Hans-CN'); });
+    return out;
+  }
+  /** 只改「固定名单」部分（订单里出现的名字不写进名单，避免以后删不掉） */
+  function saveDesigners(arr) {
+    state.designers = (arr || []).map(normName).filter(Boolean);
+    lsSetDesigners(state.designers);
+    cloudSaveSettings({ '设计师名单': { text: JSON.stringify(state.designers) } });
+    renderOwnerBar();
+    refreshAll();
+  }
+  /** 往设置表里打补丁（顺手刷新「更新时间」，不覆盖「标题」）
+      返回 Promise<Boolean>：true = 确实写到云端了，false = 没写上去（离线 / 失败） */
+  function cloudSaveSettings(patch) {
+    if (!HAS_DB || !SET_DB_ID) return Promise.resolve(false);
+    return cloudTitleRec().then(function (rec) {
+      var props = { '更新时间': { date: todayISO() } };
+      for (var k in patch) if (Object.prototype.hasOwnProperty.call(patch, k)) props[k] = patch[k];
+      if (rec && rec['_id']) return db.updateRecord({ databaseId: 'zJgP7lBJpKEFlp8IDbNyeO', recordId: rec['_id'], properties: props });
+      return db.addRecord({ databaseId: 'zJgP7lBJpKEFlp8IDbNyeO', properties: props });
+    }).then(function () { state.accFail = ''; return true; })
+      .catch(function (err) {
+        var s = String((err && err.message) || err || '');
+        // 平台写库要求浏览器登录了 WorkBuddy 账号，否则返回 401 not login
+        state.accFail = (/401|not login|未登录/i.test(s)) ? 'login' : 'other';
+        console.error('[order] 设置云同步失败:', err);
+        return false;
+      });
+  }
+  function parseDesignerList(v) {
+    var s = propText(v);
+    if (!s) return [];
+    try {
+      var arr = JSON.parse(s);
+      return Array.isArray(arr) ? arr.map(normName).filter(Boolean) : [];
+    } catch (e) { return []; }
+  }
+  /** 账号有没有真的同步到云端 —— 换电脑能不能登录，全看这个 */
+  var SYNC_MSG = {
+    ok:    '账号已同步到云端：换台电脑打开同一个链接，直接用这个账号登录就行。',
+    failLogin: '云端拒绝了写入：这个浏览器没登录 WorkBuddy 账号。请在同一浏览器打开 workbuddy.cn 登录，再回来点「重新同步到云端」—— 在那之前账号只存在这台电脑。',
+    fail:  '账号没能同步到云端，现在只存在这台电脑的浏览器里 —— 换电脑或清缓存会登录不上。最常见的原因是这个浏览器没登录 WorkBuddy 账号：登录后到「账号」里点「重新同步到云端」。',
+    local: '现在是离线模式，账号只存在这台电脑里 —— 换电脑登录不上。请用线上链接打开。',
+    empty: '还没有人注册：第一个注册的账号会自动成为老板，并同步到云端。'
+  };
+  /** 离线时把「现在是哪个地址」直接写出来，免得把本地预览误当成线上链接 */
+  function offlineWhy() {
+    try {
+      var p = location.protocol || '';
+      if (p === 'file:') return '当前是本地文件（地址栏 file:// 开头），没连上云端。';
+      var h = location.host || '';
+      if (/^localhost$|^127\.0\.0\.1/.test(h)) return '当前地址是 ' + h + '，这是本地预览，不是线上链接。';
+      if (h && /workbuddy\.link$/.test(h)) return '当前地址是 ' + h + '，但没连上云端库（可能被网络拦截）。';
+      if (h) return '当前地址是 ' + h + '（第三方托管，本来就没有 WorkBuddy 云端库）。';
+    } catch (e) {}
+    return '';
+  }
+  function setAccSync(kind, msg) {
+    state.accSync = kind;
+    // 没同步成功时，分清「浏览器没登录平台」和「网络/其他原因」，别让用户瞎查网络
+    var text = msg || (kind === 'fail' && state.accFail === 'login' ? SYNC_MSG.failLogin : SYNC_MSG[kind]) || '';
+    if (kind === 'local') text = text + offlineWhy();
+    var cls = kind === 'ok' ? 'ok' : (kind === 'local' ? 'local' : 'warn');
+    ['#accSyncTip', '#acSyncTip'].forEach(function (sel) {
+      var n = $(sel);
+      if (!n) return;
+      n.textContent = text;
+      n.classList.remove('ok', 'warn', 'local');
+      n.classList.add(cls);
+      n.classList.toggle('hide', !text);
+    });
+    renderOfflineBar();   // 同步状态一变，顺手决定要不要摆出线上地址
+  }
+
+  /** 线上地址：只有用这个地址打开，订单和账号才会存到云端（换电脑 / 多人共用都靠它） */
+  var ONLINE_URL = 'https://workbuddy.link/p/pbjKjBBVRz61U0rn3YsjaJ';
+  function fallbackCopy(t) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = t;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast(ok ? '线上地址已复制，粘贴到浏览器地址栏打开' : '复制失败，请手动选中上面的地址复制');
+    } catch (e) { toast('复制失败，请手动选中上面的地址复制'); }
+  }
+  function copyOnlineUrl() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ONLINE_URL).then(
+          function () { toast('线上地址已复制，粘贴到浏览器地址栏打开'); },
+          function () { fallbackCopy(ONLINE_URL); }
+        );
+        return;
+      }
+    } catch (e) {}
+    fallbackCopy(ONLINE_URL);
+  }
+  /** 只有双击本地文件、或本机架的预览服务，才需要「去线上版」这条提示；
+      已经挂到正式域名上的（哪怕是第三方免费主机）不该再叫人换地址 */
+  function isLocalPreview() {
+    var p = location.protocol || '';
+    if (p === 'file:') return true;
+    var h = (location.host || '').toLowerCase();
+    return /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(h);
+  }
+  function renderOfflineBar() {
+    var bar = $('#offlineBar');
+    if (!bar) return;
+    while (bar.firstChild) bar.removeChild(bar.firstChild);
+    if (HAS_DB) { bar.classList.add('hide'); return; }
+
+    if (!isLocalPreview()) {
+      // 挂在正式域名上，只是没有云端库：说明清楚「数据只在这台电脑」+ 给条活路（导入备份）
+      bar.appendChild(el('b', '', '现在是单机版'));
+      bar.appendChild(el('span', '', '这个站点没接云端数据库，订单和账号都只存在当前这个浏览器里：换电脑、换手机看不到，清缓存会丢。要换设备就在原来那台点「导出」拿到备份文件，到新设备上用「导入」恢复。'));
+      var acts2 = el('div', 'ob-acts');
+      var imp = el('button', 'btn sm primary', '导入备份文件');
+      imp.setAttribute('type', 'button');
+      imp.addEventListener('click', function () { var f = $('#fileImport'); if (f) f.click(); });
+      acts2.appendChild(imp);
+      bar.appendChild(acts2);
+      bar.classList.remove('hide');
+      return;
+    }
+
+    var why = location.protocol === 'file:'
+      ? '现在是本地文件打开的（地址栏 file:// 开头），没连上云端：订单和账号都只存在这台电脑的浏览器里，换电脑或用别人手机登不上。'
+      : '现在是本地预览（' + (location.host || '本机架的服务') + '），没连上云端：订单和账号都只存在这台电脑，换电脑登不上。';
+    bar.appendChild(el('b', '', '要用线上版？'));
+    bar.appendChild(el('span', '', why));
+    bar.appendChild(el('code', 'ob-url', ONLINE_URL));
+    var acts = el('div', 'ob-acts');
+    var copy = el('button', 'btn sm', '复制线上地址');
+    copy.setAttribute('type', 'button');
+    copy.addEventListener('click', copyOnlineUrl);
+    var open = el('a', 'btn sm primary', '打开线上版');
+    open.setAttribute('href', ONLINE_URL);
+    open.setAttribute('target', '_blank');
+    open.setAttribute('rel', 'noopener');
+    acts.appendChild(copy);
+    acts.appendChild(open);
+    bar.appendChild(acts);
+    bar.classList.remove('hide');
+  }
+
+  function restoreSettings() {
+    state.designers = lsGetDesigners();
+    state.accounts = lsGetAccounts();
+    state.owner = lsGetOwner();
+    renderOwnerBar();
+    renderAccounts();
+    if (!HAS_DB || !SET_DB_ID) { setAccSync('local'); return Promise.resolve(); }
+    return Promise.resolve(cloudTitleRec()).then(function (rec) {
+      if (!rec) {
+        // 云端设置表还是空的
+        var localAcc = getAccounts();
+        if (!localAcc.length) { setAccSync('empty'); return; }
+        // 本地有账号、云端却没有：上次多半没同步成功（最常见是浏览器没登录平台），
+        // 这次开页面自动再推一次 —— 用户一旦登录了 WorkBuddy，刷新一下就自动补上
+        return saveAccounts(localAcc);
+      }
+      var cloud = parseDesignerList(rec['设计师名单']);
+      if (cloud.length) { state.designers = cloud; lsSetDesigners(cloud); }
+      var accs = parseAccounts(rec['账号表']);
+      if (accs.length) { state.accounts = accs; lsSetAccounts(accs); }
+      renderOwnerBar();
+      renderAccounts();
+      // 云端读得到账号 = 换电脑没问题；云端没有但本地有 = 只在本地
+      if (accs.length) setAccSync('ok');
+      else setAccSync(getAccounts().length ? 'fail' : 'empty');
+    }).catch(function (err) {
+      console.error('[order] 设置读取失败:', err);
+      setAccSync(getAccounts().length ? 'fail' : '');
+    });
+  }
+  function setOwner(v) {
+    // 设计师登录以后身份就固定了：不接受切到别人，也不接受清空（否则能看到别人的单）
+    if (state.me && state.me.role === 'designer') {
+      state.owner = state.me.name;
+      renderOwnerBar();
+      refreshAll();
+      return;
+    }
+    state.owner = normName(v);
+    lsSetOwner(state.owner);
+    renderOwnerBar();   // 顶栏下拉和提示文字要跟着变（清胶囊 / 删名单的人都会走这里）
+    refreshAll();
+  }
+  /** 顶栏身份切换器 */
+  function renderOwnerBar() {
+    var sel = $('#ownerSel');
+    if (!sel) return;
+    var list = mergeDesigners();
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    var all = document.createElement('option');
+    all.value = '';
+    all.textContent = list.length ? '全部（' + list.length + ' 人）' : '全部';
+    sel.appendChild(all);
+    list.forEach(function (n) {
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+    sel.value = state.owner;
+    // 名单里已经没这个人了（被删掉）→ 自动回落到「全部」，避免打开是个空列表。
+    // 名单为空时不校验：数据还没加载完（或设计师刚登录、名下没单），不能把身份清掉
+    if (list.length && sel.value !== state.owner) { state.owner = ''; lsSetOwner(''); sel.value = ''; }
+    var hint = $('#ownerHint');
+    if (hint) hint.textContent = state.owner ? '只看 TA 的订单' : '看全部人的订单';
+    var wrap = $('#ownerWrap');
+    if (wrap) wrap.classList.toggle('is-person', !!state.owner);
+  }
+
+  /* =======================================================
+     账号体系：注册 / 登录 / 会话 / 账号管理
+     - 账号存云端设置库「账号表」（JSON 字符串），本地 localStorage 兜底
+     - 密码只存「加盐哈希」，不存明文；哈希用同步实现（浏览器和测试环境都能跑）
+     - 提醒：页面是公网链接，前端校验只能防误看，挡不住懂技术的人
+     ======================================================= */
+  var ACCOUNT_KEY = 'wb_wardrobe_accounts_v1';
+  var SESSION_KEY = 'wb_wardrobe_session_v1';
+
+  function normUser(v) { return String(v === undefined || v === null ? '' : v).trim().toLowerCase(); }
+
+  /** 同步加盐哈希：多轮混淆，用来防明文泄露 / 防误看，不是密码学级别的 KDF */
+  function pwdHash(pwd, salt) {
+    var s = String(salt) + '|' + String(pwd);
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) {
+      h = (h ^ s.charCodeAt(i)) >>> 0;
+      h = (h * 16777619) >>> 0;
+    }
+    for (var k = 0; k < 64; k++) {
+      h = (h + ((h << 7) >>> 0) + k) >>> 0;
+      h = ((h >>> 11) | (h << 21)) >>> 0;
+      h = (h ^ 0x5bf03635) >>> 0;
+    }
+    return h.toString(36);
+  }
+  function makeSalt() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+
+  function lsGetAccounts() {
+    try {
+      var raw = window.localStorage.getItem(ACCOUNT_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.filter(function (a) { return a && a.u; }) : [];
+    } catch (e) { return []; }
+  }
+  function lsSetAccounts(arr) { try { window.localStorage.setItem(ACCOUNT_KEY, JSON.stringify(arr || [])); } catch (e) {} }
+  function lsGetSession() {
+    try { var raw = window.localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function lsSetSession(s) {
+    try { if (s) window.localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else window.localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  }
+
+  function getAccounts() { return state.accounts || []; }
+  function getDesigners() { return state.designers || []; }
+  function findAccount(u) {
+    var key = normUser(u), list = getAccounts();
+    for (var i = 0; i < list.length; i++) if (normUser(list[i].u) === key) return list[i];
+    return null;
+  }
+  /** 账号表改动一律走这里：先落本地兜底，再推云端，并把「到底有没有上去」如实反馈出去 */
+  function saveAccounts(arr) {
+    state.accounts = arr || [];
+    lsSetAccounts(state.accounts);
+    renderAccounts();
+    return cloudSaveSettings({ '账号表': { text: JSON.stringify(state.accounts) } }).then(function (ok) {
+      setAccSync(ok ? 'ok' : ((HAS_DB && SET_DB_ID) ? 'fail' : 'local'));
+      return ok;
+    });
+  }
+  function parseAccounts(v) {
+    var s = propText(v);
+    if (!s) return [];
+    try {
+      var arr = JSON.parse(s);
+      return Array.isArray(arr) ? arr.filter(function (a) { return a && a.u; }) : [];
+    } catch (e) { return []; }
+  }
+  function countBoss() {
+    return getAccounts().filter(function (a) { return a.role === 'boss'; }).length;
+  }
+
+  /** 登录成功后把身份落到 state：设计师固定看自己，老板沿用上次选的人（空 = 看全部） */
+  function applySession(sess) {
+    state.me = sess ? { u: sess.u, name: normName(sess.name), role: sess.role === 'boss' ? 'boss' : 'designer' } : null;
+    state.owner = sess ? (state.me.role === 'designer' ? state.me.name : lsGetOwner()) : '';
+    renderMe();
+    renderOwnerBar();
+  }
+  /** 顶栏账号区：名字 / 角色 / 只有老板能用的按钮 */
+  function renderMe() {
+    var me = state.me;
+    var nm = $('#meName'), rl = $('#meRole');
+    if (nm) nm.textContent = me ? (me.name || me.u) : '未登录';
+    if (rl) rl.textContent = me ? (me.role === 'boss' ? '老板' : '设计师') : '—';
+    var isBoss = !!me && me.role === 'boss';
+    var ba = $('#btnAccounts'); if (ba) ba.classList.toggle('hide', !isBoss);
+    var bd = $('#btnDesigners'); if (bd) bd.classList.toggle('hide', !isBoss);
+    var bd2 = $('#btnExport'); if (bd2) bd2.classList.toggle('hide', !isBoss);
+    var bd3 = $('#btnImport'); if (bd3) bd3.classList.toggle('hide', !isBoss);
+    // 设计师没有「看别人的单」这个选项，切换器对他没意义
+    var ow = $('#ownerWrap'); if (ow) ow.classList.toggle('hide', !!me && me.role === 'designer');
+  }
+
+  function showAuthGate() {
+    document.body.classList.add('auth-lock');
+    var g = $('#authGate'); if (g) g.classList.remove('hide');
+    var t = $('#authTip'); if (t) t.textContent = '';
+  }
+  function hideAuthGate() {
+    document.body.classList.remove('auth-lock');
+    var g = $('#authGate'); if (g) g.classList.add('hide');
+  }
+
+  function authErr(msg) { var t = $('#authTip'); if (t) t.textContent = msg; }
+
+  function doLogin() {
+    var u = normUser($('#auUser') && $('#auUser').value);
+    var p = $('#auPwd') ? $('#auPwd').value : '';
+    if (!u) { authErr('请填用户名'); return; }
+    var acc = findAccount(u);
+    if (!acc) { authErr('这个用户名还没注册'); return; }
+    if (pwdHash(p, acc.salt) !== acc.h) { authErr('密码不对，再试一次'); return; }
+    var sess = { u: acc.u, name: acc.name, role: acc.role, at: todayISO() };
+    lsSetSession(sess);
+    hideAuthGate();
+    applySession(sess);
+    startApp();
+    if (state.accSync === 'fail') {
+      toast(state.accFail === 'login'
+        ? '注意：这个浏览器没登录 WorkBuddy 账号，云端写入被拒绝，换电脑会登录不上'
+        : '注意：账号没同步到云端，换电脑会登录不上');
+    }
+  }
+
+  function doRegister() {
+    var u = normUser($('#ruUser') && $('#ruUser').value);
+    var name = normName($('#ruName') && $('#ruName').value);
+    var p = $('#ruPwd') ? $('#ruPwd').value : '';
+    var p2 = $('#ruPwd2') ? $('#ruPwd2').value : '';
+    if (u.length < 2) { authErr('用户名至少 2 个字符'); return; }
+    if (!name) { authErr('请填姓名，就是订单上的设计师名字'); return; }
+    if (p.length < 6) { authErr('密码至少 6 位'); return; }
+    if (p !== p2) { authErr('两次输入的密码不一样'); return; }
+    if (findAccount(u)) { authErr('这个用户名已经被占用了'); return; }
+    // 第一个注册的账号自动成为老板，之后的都是设计师
+    var role = getAccounts().length ? 'designer' : 'boss';
+    var salt = makeSalt();
+    var acc = { u: u, name: name, salt: salt, h: pwdHash(p, salt), role: role, at: todayISO() };
+    // 等云端结果回来再进主界面：同步成没成功必须让用户知道，否则换电脑才发现登不上
+    saveAccounts(getAccounts().concat([acc])).then(function (ok) {
+      var sess = { u: acc.u, name: acc.name, role: acc.role, at: todayISO() };
+      lsSetSession(sess);
+      hideAuthGate();
+      applySession(sess);
+      startApp();
+      if (ok) {
+        toast(role === 'boss' ? '注册成功：第一个账号自动成为老板，已同步到云端' : '注册成功，账号已同步到云端');
+      } else if (state.accSync === 'local') {
+        toast('注册成功（离线模式，账号只在这台电脑）');
+      } else if (state.accFail === 'login') {
+        toast('注册成功，但这个浏览器没登录 WorkBuddy，账号暂时只在这台电脑 —— 登录后再到「账号」里点「重新同步到云端」');
+      } else {
+        toast('注册成功，但账号没同步到云端 —— 换电脑会登录不上');
+      }
+    });
+  }
+
+  function doLogout() {
+    askConfirm('退出后要重新登录才能看订单，确定吗？', '退出', function () {
+      lsSetSession(null);
+      lsSetOwner('');
+      state.me = null;
+      state.owner = '';
+      state.rows = [];          // 退出即清屏，敏感数字不留在页面上
+      refreshAll();
+      renderMe();
+      renderOwnerBar();
+      showAuthGate();
+    });
+  }
+
+  /* ---- 账号管理（只有老板能开） ---- */
+  function renderAccounts() {
+    var box = $('#acList');
+    if (!box) return;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    var list = getAccounts();
+    if (!list.length) { box.appendChild(el('li', 'dm-empty', '还没有账号：第一个注册的人会自动成为老板。')); return; }
+    var bosses = countBoss();
+    list.forEach(function (a) {
+      var li = el('li');
+      var main = el('div', 'nm');
+      main.appendChild(el('div', 'acc-u', normName(a.name) || a.u));
+      main.appendChild(el('div', 'acc-meta', '登录名 ' + a.u + (a.at ? ' · 注册于 ' + a.at : '')));
+      li.appendChild(main);
+      li.appendChild(el('span', 'tag' + (a.role === 'boss' ? ' boss' : ''), a.role === 'boss' ? '老板' : '设计师'));
+      var isMe = state.me && normUser(state.me.u) === normUser(a.u);
+      if (isMe) {
+        li.appendChild(el('span', 'cnt', '本人'));
+      } else {
+        var opRole = el('button', 'op', a.role === 'boss' ? '设为设计师' : '设为老板');
+        if (a.role === 'boss' && bosses <= 1) { opRole.disabled = true; opRole.title = '至少要留一个老板'; }
+        opRole.addEventListener('click', function () {
+          if (a.role === 'boss' && bosses <= 1) { toast('至少要留一个老板'); return; }
+          saveAccounts(getAccounts().map(function (x) {
+            if (normUser(x.u) === normUser(a.u)) x.role = (a.role === 'boss' ? 'designer' : 'boss');
+            return x;
+          }));
+          toast('已把「' + (normName(a.name) || a.u) + '」设为' + (a.role === 'boss' ? '设计师' : '老板'));
+        });
+        var opPwd = el('button', 'op', '重置密码');
+        opPwd.addEventListener('click', function () {
+          askConfirm('把「' + (normName(a.name) || a.u) + '」的密码重置为 123456？', '重置', function () {
+            var salt = makeSalt();
+            saveAccounts(getAccounts().map(function (x) {
+              if (normUser(x.u) === normUser(a.u)) { x.salt = salt; x.h = pwdHash('123456', salt); }
+              return x;
+            }));
+            toast('密码已重置为 123456');
+          });
+        });
+        var opDel = el('button', 'op warn', '删除');
+        opDel.addEventListener('click', function () {
+          askConfirm('删除账号「' + (normName(a.name) || a.u) + '」？订单数据不受影响。', '删除', function () {
+            saveAccounts(getAccounts().filter(function (x) { return normUser(x.u) !== normUser(a.u); }));
+            toast('账号已删除');
+          });
+        });
+        li.appendChild(opRole); li.appendChild(opPwd); li.appendChild(opDel);
+      }
+      box.appendChild(li);
+    });
+  }
+  function openAccountsDialog() {
+    renderAccounts();
+    $('#acMask').classList.add('on');
+    $('#acDialog').classList.add('on');
+  }
+  function closeAccountsDialog() {
+    $('#acMask').classList.remove('on');
+    $('#acDialog').classList.remove('on');
+  }
+
+  function bindAuthEvents() {
+    var lg = $('#auLogin'); if (lg) lg.addEventListener('click', doLogin);
+    var rg = $('#ruReg'); if (rg) rg.addEventListener('click', doRegister);
+    var gr = $('#auGoReg');
+    if (gr) gr.addEventListener('click', function () {
+      $('#authLogin').classList.add('hide'); $('#authReg').classList.remove('hide'); authErr('');
+    });
+    var gl = $('#auGoLogin');
+    if (gl) gl.addEventListener('click', function () {
+      $('#authReg').classList.add('hide'); $('#authLogin').classList.remove('hide'); authErr('');
+    });
+    ['#auUser', '#auPwd'].forEach(function (s) {
+      var n = $(s);
+      if (n) n.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doLogin(); } });
+    });
+    var lo = $('#btnLogout'); if (lo) lo.addEventListener('click', doLogout);
+    var ba = $('#btnAccounts'); if (ba) ba.addEventListener('click', openAccountsDialog);
+    var ac = $('#acClose'); if (ac) ac.addEventListener('click', closeAccountsDialog);
+    var am = $('#acMask'); if (am) am.addEventListener('click', closeAccountsDialog);
+    // 登录平台账号后点这个补同步：不用重新注册，直接把本地账号再推一次云端
+    var rs = $('#acResync');
+    if (rs) rs.addEventListener('click', function () {
+      rs.disabled = true;
+      saveAccounts(getAccounts()).then(function (ok) {
+        rs.disabled = false;
+        toast(ok ? '已同步到云端：换电脑也能登录了'
+                 : (state.accFail === 'login' ? '还是没登录 WorkBuddy 账号，请先在 workbuddy.cn 登录再试' : '同步失败，请检查网络后重试'));
+      });
+    });
+  }
+
+  /* ---- 设计师名单管理弹层 ---- */
+  function renderDesignerDialog() {
+    var box = $('#dmList');
+    if (!box) return;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    var fixed = {};
+    state.designers.forEach(function (n) { fixed[n] = 1; });
+    var all = mergeDesigners();
+    if (!all.length) {
+      box.appendChild(el('li', 'dm-empty', '还没有设计师：先在下面加一个名字，或直接在订单里填「设计师」。'));
+      return;
+    }
+    all.forEach(function (n) {
+      var cnt = state.rows.filter(function (r) { return normName(r['设计师']) === n; }).length;
+      var li = el('li');
+      li.appendChild(el('span', 'nm', n));
+      li.appendChild(el('span', 'cnt', cnt + ' 单'));
+      if (fixed[n]) {
+        var d = el('button', 'del');
+        d.setAttribute('data-del-designer', n);
+        d.setAttribute('aria-label', '从名单里移除 ' + n);
+        d.appendChild(makeIcon('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>'));
+        li.appendChild(d);
+      } else {
+        li.appendChild(el('span', 'cnt', '来自订单'));
+      }
+      box.appendChild(li);
+    });
+  }
+  function openDesignerDialog() {
+    renderDesignerDialog();
+    $('#dmMask').classList.add('on');
+    $('#dmDialog').classList.add('on');
+    var inp = $('#dmInput');
+    if (inp) { inp.value = ''; try { inp.focus(); } catch (e) {} }
+  }
+  function closeDesignerDialog() {
+    $('#dmMask').classList.remove('on');
+    $('#dmDialog').classList.remove('on');
+  }
+  function addDesigner() {
+    var inp = $('#dmInput');
+    if (!inp) return;
+    var n = normName(inp.value);
+    if (!n) { toast('先输入设计师名字'); return; }
+    if (state.designers.indexOf(n) > -1) { toast('名单里已经有「' + n + '」了'); return; }
+    saveDesigners(state.designers.concat([n]));
+    inp.value = '';
+    renderDesignerDialog();
+    try { inp.focus(); } catch (e) {}
+    toast('已添加「' + n + '」');
+  }
+  function removeDesigner(n) {
+    n = normName(n);
+    saveDesigners(state.designers.filter(function (x) { return x !== n; }));
+    renderDesignerDialog();
+    toast('已从名单移除「' + n + '」（订单里的名字没动）');
+  }
+  function bindDesignerEvents() {
+    var b = $('#btnDesigners');
+    if (b) b.addEventListener('click', openDesignerDialog);
+    if ($('#dmClose')) $('#dmClose').addEventListener('click', closeDesignerDialog);
+    if ($('#dmMask')) $('#dmMask').addEventListener('click', closeDesignerDialog);
+    if ($('#dmAdd')) $('#dmAdd').addEventListener('click', addDesigner);
+    var inp = $('#dmInput');
+    if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addDesigner(); } });
+    var sel = $('#ownerSel');
+    if (sel) sel.addEventListener('change', function () { setOwner(this.value); });
+    var dl = $('#dmList');
+    if (dl) dl.addEventListener('click', function (e) {
+      var t = e.target && e.target.closest ? e.target.closest('[data-del-designer]') : null;
+      if (t) removeDesigner(t.getAttribute('data-del-designer'));
+    });
+  }
+
+  /* =======================================================
+     计算层：所有筛选 / 排序 / 聚合都从这里出，保证模块间一致
+     ======================================================= */
+  function matchStage(r) {
+    if (!state.stage) return true;
+    // 「未下单」= 已下单之前的 6 个阶段（含新插进来的「待确认」）
+    if (state.stage === PRE_KEY) {
+      var i = stageIndex(r['阶段']);
+      return i >= 0 && i < ORDERED_AT;
+    }
+    return r['阶段'] === state.stage;
+  }
+  /** 阶段筛选在界面上显示的名字（「未下单」这类合并口径要还原成中文） */
+  function stageLabel(k) {
+    if (k === PRE_KEY) return PRE_NAME;
+    return k;
+  }
+  function matchKw(r) {
+    var kw = state.kw.trim().toLowerCase();
+    if (!kw) return true;
+    var hay = [r['客户姓名'], r['联系电话'], r['小区地址'], r['备注'], r['阶段'], r['区域销售经理'], r['设计师']]
+      .join(' ').toLowerCase();
+    return hay.indexOf(kw) !== -1;
+  }
+  /** 当前身份：'' 看全部；等于某个人名时，只看这个设计师的单 */
+  function matchOwner(r) {
+    if (!state.owner) return true;
+    return normName(r['设计师']) === state.owner;
+  }
+  /** 接单月：取接单日期的 YYYY-MM */
+  function monthOf(v) {
+    var s = dayOnly(v);
+    return s ? s.slice(0, 7) : '';
+  }
+  function matchMonth(r) {
+    if (!state.month) return true;
+    return monthOf(r['接单日期']) === state.month;
+  }
+  /** 接单年：取接单日期的 YYYY（年度统计 / 接单年筛选都用它） */
+  function yearOf(v) {
+    var s = dayOnly(v);
+    return s ? s.slice(0, 4) : '';
+  }
+  /** 「下单月数」：优先取「下单日期」所在月；没有（老数据 / 还没推进到已下单）才退回接单月 */
+  function orderMonthOf(r) {
+    if (isOrdered(r)) {
+      var om = monthOf(r['下单日期']);
+      if (om) return om;
+    }
+    return monthOf(r['接单日期']) || '未填月份';
+  }
+  function orderYearOf(r) {
+    if (isOrdered(r)) {
+      var oy = yearOf(r['下单日期']);
+      if (oy) return oy;
+    }
+    return yearOf(r['接单日期']) || '未填年份';
+  }
+  /**
+   * 「更新月 / 更新年」：取「更新日期」（最近一次推进 / 编辑自动记的当天）所在月 / 年。
+   * 提成 / 扣款按月（年）归类时用它，不看接单时间；
+   * 老数据 / 还没写过更新日期的，回退到「下单日期 → 接单月」，避免归零。
+   */
+  function updateMonthOf(r) {
+    var um = monthOf(r['更新日期']);
+    if (um) return um;
+    return orderMonthOf(r);
+  }
+  function updateYearOf(r) {
+    var uy = yearOf(r['更新日期']);
+    if (uy) return uy;
+    return orderYearOf(r);
+  }
+  function matchYear(r) {
+    if (!state.year) return true;
+    return yearOf(r['接单日期']) === state.year;
+  }
+  /** 「下单单数」口径：推进到「已下单」及之后（已下单 / 已安装 / 已结清），退单不算 */
+  function isOrdered(r) {
+    return stageIndex(r['阶段']) >= ORDERED_AT && r['阶段'] !== '退单';
+  }
+  function sortRows(arr) {
+    var k = state.sortKey, d = state.sortDir === 'desc' ? -1 : 1;
+    return arr.slice().sort(function (a, b) {
+      var av, bv;
+      if (k === 'amount') { av = Number(a['金额'] || 0); bv = Number(b['金额'] || 0); }
+      else {
+        av = dayOnly(k === 'order' ? a['接单日期'] : a['跟进日期']) || '9999-99-99';
+        bv = dayOnly(k === 'order' ? b['接单日期'] : b['跟进日期']) || '9999-99-99';
+      }
+      if (av < bv) return -1 * d;
+      if (av > bv) return 1 * d;
+      return 0;
+    });
+  }
+  /** 当前筛选范围（阶段 + 关键词 + 接单月）下的订单 */
+  function filteredRows() {
+    return sortRows(state.rows.filter(function (r) { return matchOwner(r) && matchStage(r) && matchKw(r) && matchYear(r) && matchMonth(r); }));
+  }
+  /**
+   * 统计口径下的订单。刻意不带「阶段」条件：
+   * 这样「月度统计 / 年度统计 / 数据统计」在「全部」页和任意一个阶段页里，位置 / 大小 / 内容都一模一样（只认关键词 + 接单年 + 接单月）。
+   */
+  function statRows() {
+    if (state.statScope === 'all') return state.rows;
+    return state.rows.filter(function (r) { return matchOwner(r) && matchKw(r) && matchYear(r) && matchMonth(r); });
+  }
+  function countByStage(rows) {
+    var m = { '': rows.length };
+    STAGES.forEach(function (s) { m[s.name] = 0; });
+    rows.forEach(function (r) { m[r['阶段']] = (m[r['阶段']] === undefined ? 0 : m[r['阶段']]) + 1; });
+    // 「未下单」= 新增订单 + 已测量 + 出图中 + 已出图 + 已复尺 + 待确认
+    m[PRE_KEY] = PRE_STAGES.reduce(function (s, x) { return s + (m[x.name] || 0); }, 0);
+    return m;
+  }
+  function aggregate(rows) {
+    return {
+      total: rows.length,
+      settled: rows.filter(function (r) { return r['阶段'] === '已结清'; }).length,
+      installed: rows.filter(function (r) { return r['阶段'] === '已安装'; }).length,
+      amount: rows.reduce(function (s, r) { return s + Number(r['金额'] || 0); }, 0),
+      commission: rows.reduce(function (s, r) { return s + Number(r['提成'] || 0); }, 0),
+      deduction: rows.reduce(function (s, r) { return s + deductionOf(r); }, 0),
+      byStage: countByStage(rows)
+    };
+  }
+  /** 今天要处理：筛选范围内、跟单日在 [-3, +∞) 、且未终结 */
+  function todayItems(rows) {
+    var t = todayISO(), out = [];
+    rows.forEach(function (r) {
+      if (DONE_STAGES.indexOf(r['阶段']) > -1) return;
+      var fd = dayOnly(r['跟进日期']);
+      if (!fd) return;
+      var diff = dayDiff(fd, t);
+      if (diff <= 3) out.push({ row: r, diff: diff, kind: diff < 0 ? 'over' : (diff === 0 ? 'today' : 'soon') });
+    });
+    out.sort(function (a, b) { return a.diff - b.diff; });
+    return out;
+  }
+  /* =======================================================
+     渲染层：一次 commit() → 全部模块同步刷新
+     ======================================================= */
+  function refreshAll() {
+    renderChips();
+    renderTabs();
+    renderToday();
+    renderList();
+    renderStats();
+  }
+
+  /* ---- 条件胶囊 ---- */
+  function renderChips() {
+    var box = $('#chips');
+    box.innerHTML = '';
+    var list = [];
+    // 设计师登录时身份不可清除，就不显示这个胶囊（免得点了没反应）
+    if (state.owner && !(state.me && state.me.role === 'designer')) list.push({ key: 'owner', text: '设计师', val: state.owner });
+    if (state.stage) list.push({ key: 'stage', text: '阶段', val: stageLabel(state.stage) });
+    if (state.kw.trim()) list.push({ key: 'kw', text: '关键词', val: state.kw.trim() });
+    if (state.year) list.push({ key: 'year', text: '接单年', val: state.year + ' 年' });
+    if (state.month) list.push({ key: 'month', text: '接单月', val: state.month });
+    if (state.sortKey !== 'follow' || state.sortDir !== 'asc') {
+      var label = { follow: '跟进日期', order: '接单日期', amount: '金额' }[state.sortKey];
+      list.push({ key: 'sort', text: '排序', val: label + (state.sortDir === 'asc' ? ' ↑' : ' ↓') });
+    }
+    if (!list.length) return;
+    box.appendChild(el('span', 'c-label', '生效条件'));
+    list.forEach(function (c) {
+      var chip = el('span', 'chip');
+      chip.appendChild(el('span', '', c.text + '：'));
+      chip.appendChild(el('b', '', c.val));
+      var x = el('button', 'x');
+      x.setAttribute('data-clear', c.key);
+      x.setAttribute('aria-label', '清除' + c.text);
+      x.innerHTML = '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      chip.appendChild(x);
+      box.appendChild(chip);
+    });
+    $('#btnReset').classList.remove('hide');
+  }
+
+  /* ---- 阶段 tab ---- */
+  function renderTabs() {
+    var box = $('#stageTabs');
+    box.innerHTML = '';
+    // tab 上的数字要跟着「接单月 / 关键词」走（但不被自己那个阶段筛掉），
+    // 否则会出现「已结清 1」却显示没有订单的错觉
+    var pool = state.rows.filter(function (r) { return matchOwner(r) && matchKw(r) && matchMonth(r); });
+    var counts = countByStage(pool);
+    // 末尾那个「未下单」是合并口径（已下单之前的所有阶段），不是真实阶段
+    var list = [{ name: '', color: '#8B8073' }].concat(STAGES, [{ name: PRE_KEY, color: '#8B8073', pre: true }]);
+    list.forEach(function (s) {
+      var b = el('button', 'tab' + (state.stage === s.name ? ' on' : ''));
+      var pip = el('i', 'pip');
+      pip.style.background = s.color;
+      pip.appendChild(makeIcon(STAGE_ICON_SVG[s.name === '' ? '' : (s.name === PRE_KEY ? 'pre' : s.name)] || STAGE_ICON_SVG['']));
+      b.appendChild(pip);
+      b.appendChild(document.createTextNode(s.name === '' ? '全部' : stageLabel(s.name)));
+      var n = el('span', 'n', String(s.name === '' ? pool.length : (counts[s.name] || 0)));
+      b.appendChild(n);
+      b.setAttribute('data-stage', s.name);
+      if (state.kw.trim()) b.className += ' hit';
+      if (s.pre) b.className += ' tab-pre';
+      box.appendChild(b);
+    });
+  }
+
+  /* ---- 今天要处理 ---- */
+  function renderToday() {
+    var pool = state.todayScope === 'all'
+      ? state.rows.filter(function (r) { return matchOwner(r); })
+      : state.rows.filter(function (r) { return matchOwner(r) && matchKw(r) && matchMonth(r); });
+    var items = todayItems(pool);
+    var box = $('#todayList'), empty = $('#todayEmpty'), badge = $('#todayCount');
+    box.innerHTML = '';
+
+    var over = items.filter(function (i) { return i.kind === 'over'; }).length;
+    badge.textContent = items.length ? (items.length + ' 项' + (over ? '，其中 ' + over + ' 项逾期' : '')) : '全部清空 ✓';
+    if (over) badge.classList.add('hot'); else badge.classList.remove('hot');
+    $('#todayScope').textContent = state.todayScope === 'all' ? '全量' : '随筛选';
+    $('#todayHint').textContent = state.todayScope === 'all'
+      ? '点条目可跳到下方订单卡片；逾期的会一直留在这里。'
+      : '当前跟着上方筛选（关键词 / 接单月）走，点右上「全量」可让它始终显示全部待办。';
+
+    if (!items.length) {
+      empty.classList.remove('hide');
+      empty.textContent = state.rows.length ? '当前筛选下没有到期待办 ✓' : '数据加载中…';
+      return;
+    }
+    empty.classList.add('hide');
+
+    items.forEach(function (it) {
+      var r = it.row;
+      var li = el('li', 't-item ' + it.kind + (state.focusId === r._id ? ' focus' : ''));
+      var main = el('div', 't-main');
+      var nameRow = el('div', 't-name');
+      var nm = el('span', 'jump');
+      nm.setAttribute('data-focus', r._id);
+      nm.title = '跳到订单卡片';
+      hlInto(nm, r['客户姓名'] || '未命名客户');
+      nameRow.appendChild(nm);
+      var tg = bind(el('span', 'tag', esc(r['阶段']) || '未设阶段'));
+      tg.style.background = stageColor(r['阶段']);
+      nameRow.appendChild(tg);
+      main.appendChild(nameRow);
+      main.appendChild(hlInto(el('div', 't-sub', esc(r['小区地址']) || '未填地址')));
+      var date = bind(el('div', 't-date', whenLabel(it.diff, dayOnly(r['跟进日期']))));
+      main.appendChild(date);
+      li.appendChild(main);
+
+      var acts = el('div', 't-acts');
+      acts.appendChild(actionBtn('编辑', 'edit', r._id, 'ghost'));
+      acts.appendChild(actionBtn('已跟进', 'donefollow', r._id, ''));
+      if (stageIndex(r['阶段']) < STAGES.length - 1) acts.appendChild(actionBtn('推进', 'advance', r._id, 'primary'));
+      touches(acts);
+      li.appendChild(acts);
+      box.appendChild(li);
+    });
+  }
+  function whenLabel(diff, dstr) {
+    if (diff < 0) return '逾期 ' + (-diff) + ' 天（' + prettyDate(dstr) + '）';
+    if (diff === 0) return '今天 ' + prettyDate(dstr);
+    return diff + ' 天后 · ' + prettyDate(dstr);
+  }
+  function actionBtn(text, act, id, cls) {
+    var b = el('button', 'btn sm ' + (cls || ''));
+    var g = ACT_ICONS[act];
+    if (g) b.appendChild(makeIcon(g));
+    var t = el('span', 'b-txt', text);
+    b.appendChild(t);
+    b.setAttribute('data-act', act);
+    b.setAttribute('data-id', id);
+    return b;
+  }
+  function touches(node) {
+    Array.prototype.forEach.call(node.querySelectorAll('.btn'), function (b) {
+      b.style.minHeight = '38px'; b.style.padding = '0 12px';
+    });
+  }
+
+  /* ---- 订单列表 ---- */
+  function renderList() {
+    var rows = filteredRows();
+    var box = $('#orderList'), empty = $('#orderEmpty');
+    box.innerHTML = '';
+    $('#listCount').textContent = rows.length + ' 单';
+    if (!rows.length) { showOrderEmpty(empty); return; }
+    empty.classList.add('hide');
+    empty.innerHTML = '';
+    rows.forEach(function (r) { box.appendChild(orderCard(r)); });
+  }
+  /** 空列表：说清楚是被什么挡住的，并给一个一键解除的出口 */
+  function showOrderEmpty(empty) {
+    empty.innerHTML = '';
+    empty.classList.remove('hide');
+    var name = stageLabel(state.stage) || '全部';
+    var inStage = state.rows.filter(matchStage).length;
+    var blocked = [];
+    if (state.kw.trim()) blocked.push('关键词「' + state.kw.trim() + '」');
+    if (state.year) blocked.push('接单年 ' + state.year + ' 年');
+    if (state.month) blocked.push('接单月 ' + state.month);
+
+    var wrap = el('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:9px;align-items:center';
+    if (inStage && blocked.length) {
+      wrap.appendChild(el('div', '', '「' + name + '」全库有 ' + inStage + ' 单，但被' + blocked.join('、') + '挡住了'));
+      var b = el('button', 'btn sm', '清掉这些条件看这 ' + inStage + ' 单');
+      b.id = 'emptyFix';
+      b.addEventListener('click', function () {
+        state.kw = '';
+        var kw = $('#kw'); if (kw) kw.value = '';
+        refreshAll();
+        toast('已清掉条件，回到「' + name + '」的 ' + inStage + ' 单');
+      });
+      wrap.appendChild(b);
+    } else if (inStage) {
+      wrap.appendChild(el('div', '', '「' + name + '」暂时没有订单'));
+    } else {
+      wrap.appendChild(el('div', '', '「' + name + '」还没有订单，点右上「+ 新增订单」录一条'));
+    }
+    empty.appendChild(wrap);
+  }
+
+  function orderCard(r) {
+    var li = el('li', 'o-card' + (state.focusId === r._id ? ' focus' : ''));
+    li.setAttribute('data-id', r._id);
+    li.style.setProperty('--sc', stageColor(r['阶段']));   // 给左侧色条上阶段色
+
+    var top = el('div', 'o-top');
+    var left = el('div');
+    var nm = el('div', 'o-name');
+    var jump = el('span', 'jump');
+    jump.setAttribute('data-focus', r._id);
+    jump.title = '编辑这条订单';
+    hlInto(jump, r['客户姓名'] || '未命名客户');
+    nm.appendChild(jump);
+    var tg = bind(el('span', 'tag', esc(r['阶段']) || '未设阶段'));
+    tg.style.background = stageColor(r['阶段']);
+    nm.appendChild(tg);
+    left.appendChild(nm);
+
+    var info = el('div', 'o-info');
+    var i1 = el('span'); i1.appendChild(icon('date')); hlInto(i1, '接单：' + (dayOnly(r['接单日期']) || '未填'));
+    var i2 = el('span'); i2.appendChild(icon('order')); hlInto(i2, '下单：' + (dayOnly(r['下单日期']) || '未填'));
+    var i3 = el('span'); i3.appendChild(icon('pin')); hlInto(i3, r['小区地址'] || '');
+    // 联系电话不再展示（仅保存在数据里，供检索用）
+    [i1, i2, i3].forEach(function (n) { if (n.textContent.trim()) info.appendChild(n); });
+    left.appendChild(info);
+
+    var dd = deductionOf(r);
+    var comm = num(r['提成']) - dd;
+    if (num(r['提成']) || dd) {
+      var moneyLine = el('div', 'o-money');
+      var cf = el('span', 'o-comm');
+      cf.appendChild(document.createTextNode('提成 ' + money(r['提成'])));
+      var parts = deductionParts(r);
+      if (parts.length) cf.appendChild(document.createTextNode(' · ' + parts.join(' + ')));
+      cf.appendChild(document.createTextNode(' → 净 ' + money(comm)));
+      moneyLine.appendChild(cf);
+      left.appendChild(moneyLine);
+    }
+    if (r['设计师']) left.appendChild(hlInto(el('div', 'o-designer', '设计师：'), esc(r['设计师'])));
+    if (r['区域销售经理']) left.appendChild(hlInto(el('div', 'o-info', '销售经理：'), esc(r['区域销售经理'])));
+    if (r['备注']) left.appendChild(hlInto(el('div', 'o-remark', '备注：'), r['备注'].slice(0, 80) + (String(r['备注']).length > 80 ? '…' : '')));
+    top.appendChild(left);
+    li.appendChild(top);
+
+    li.appendChild(flowBar(r));
+
+    var fd = dayOnly(r['跟进日期']);
+    if (fd) {
+      var diff = dayDiff(fd, todayISO());
+      var line = el('div', 'o-info');
+      var lb = bind(el('span', 'f-follow-date', '下次跟进：' + prettyDate(fd)));
+      if (diff < 0 && r['阶段'] !== '已安装') { lb.style.color = '#D64545'; lb.style.fontWeight = '600'; lb.textContent += '（逾期 ' + (-diff) + ' 天）'; }
+      line.appendChild(lb);
+      li.appendChild(line);
+    }
+
+    /* 可展开详情 */
+    var det = el('div', 'o-detail hide');
+    det.id = 'det-' + r._id;
+    det.appendChild(dRow('接单日期', dayOnly(r['接单日期']) || '—'));
+    det.appendChild(dRow('下次跟进', dayOnly(r['跟进日期']) || '—'));
+    det.appendChild(dRow('阶段', esc(r['阶段']) || '—'));
+    det.appendChild(dRow('设计师', esc(r['设计师']) || '—'));
+    det.appendChild(dRow('区域销售经理', esc(r['区域销售经理']) || '—', true));
+    det.appendChild(dRow('金额', money(r['金额'])));
+    det.appendChild(dRow('提成', money(r['提成'])));
+    det.appendChild(dRow('补件扣款', reworkDetailVal(r, '补件扣款')));
+    det.appendChild(dRow('整改扣款', reworkDetailVal(r, '整改扣款')));
+    det.appendChild(dRow('扣款合计', money(deductionOf(r))));
+    det.appendChild(dRow('净提成', money(num(r['提成']) - deductionOf(r))));
+    det.appendChild(dRow('小区地址', esc(r['小区地址']) || '—', true));
+    det.appendChild(dRow('备注', esc(r['备注']) || '—', true));
+    var dActs = el('div', 'd-acts');
+    dActs.appendChild(actionBtn('设为今天已跟进', 'donefollow', r._id, ''));
+    dActs.appendChild(actionBtn('标为退单', 'refund', r._id, ''));
+    dActs.appendChild(actionBtn('在「今天要处理」中定位', 'locate', r._id, 'ghost'));
+    dActs.appendChild(actionBtn('跳到统计图表', 'gotostats', r._id, 'ghost'));
+    touches(dActs);
+    det.appendChild(dActs);
+    li.appendChild(det);
+
+    /* 底部操作 */
+    var foot = el('div', 'o-foot');
+    var step = el('div', 'o-step');
+    var si = stageIndex(r['阶段']);
+    if (si > 0) step.appendChild(actionBtn('◀ 回退到 ' + STAGES[si - 1].name, 'back', r._id, 'ghost'));
+    if (si > -1 && si < STAGES.length - 1) step.appendChild(actionBtn('推进到 ' + STAGES[si + 1].name, 'advance', r._id, 'primary'));
+    foot.appendChild(step);
+    var right = el('div', 'o-step');
+    right.appendChild(actionBtn('详情', 'detail', r._id, 'ghost'));
+    right.appendChild(actionBtn('编辑', 'edit', r._id, 'ghost'));
+    right.appendChild(actionBtn('删除', 'del', r._id, 'danger'));
+    foot.appendChild(right);
+    li.appendChild(foot);
+    return li;
+  }
+  function dRow(k, v, full) {
+    var row = el('div', 'd-row' + (full ? ' d-full' : ''));
+    row.appendChild(el('b', '', k));
+    row.appendChild(hlNode(v));
+    return row;
+  }
+  var ICONS = {
+    date:   [['rect', { x: 3, y: 4, width: 18, height: 17, rx: 2 }], ['path', { d: 'M8 2v4M16 2v4M3 10h18' }]],
+    order:  [['circle', { cx: 9, cy: 20, r: 1.6 }], ['circle', { cx: 17, cy: 20, r: 1.6 }], ['path', { d: 'M3 4h2l2.4 12h11l1.8-8H6' }]],
+    phone:  [['path', { d: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z' }]],
+    pin:    [['path', { d: 'M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z' }], ['circle', { cx: 12, cy: 10, r: 3 }]]
+  };
+  /* 阶段专属图标（用于 tab 徽章，纯装饰、不进 textContent） */
+  var STAGE_ICON_SVG = {
+    '': '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+    '新增订单': '<path d="M14 3v4h4"/><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><path d="M12 11v6M9 14h6"/>',
+    '已测量': '<path d="M3 17 12 4l9 13z"/><path d="M7.5 17h9M9.5 13h5M11.5 9h2"/>',
+    '出图中': '<path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/>',
+    '已出图': '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5L5 19"/>',
+    '已复尺': '<path d="M21 12a9 9 0 1 1-3.2-6.9"/><path d="M21 4v5h-5"/>',
+    '待确认': '<circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.6 2.6 0 0 1 4.3 1.4c0 1.6-2.2 2-2.2 3.3"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/>',
+    '已下单': '<circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/><path d="M3 4h2l2.4 12h11l1.8-8H6"/>',
+    '已安装': '<path d="M14.5 6a3.5 3.5 0 0 1-4.6 4.6L4 16.5 7.5 20l5.9-5.9A3.5 3.5 0 0 1 18 9.5l-2-2 1.4-1.4-1.4-1.4-1.4 1.4z"/>',
+    '已结清': '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/>',
+    '退单': '<path d="M9 14 5 10l4-4"/><path d="M5 10h10a5 5 0 0 1 0 10h-3"/>',
+    'pre': '<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>'
+  };
+  function makeIcon(markup) {
+    // 用 DOMParser 把硬编码 SVG 片段解析为真实节点（非 innerHTML 拼接，规避 XSS 误报）
+    var doc = new DOMParser().parseFromString(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + markup + '</svg>', 'image/svg+xml');
+    return document.importNode(doc.documentElement, true);
+  }
+  /* 操作按钮图标（按 act 类型，纯装饰、不进 textContent） */
+  var ACT_ICONS = {
+    advance: '<svg viewBox="0 0 24 24"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>',
+    back: '<svg viewBox="0 0 24 24"><path d="M19 12H6"/><path d="M11 6l-6 6 6 6"/></svg>',
+    detail: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="8" r=".8" fill="currentColor" stroke="none"/></svg>',
+    edit: '<svg viewBox="0 0 24 24"><path d="M4 20l3-1L19 7l-3-3L4 16z"/><path d="M14 6l3 3"/></svg>',
+    del: '<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>',
+    donefollow: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/></svg>',
+    refund: '<svg viewBox="0 0 24 24"><path d="M9 14 5 10l4-4"/><path d="M5 10h10a5 5 0 0 1 0 10h-3"/></svg>',
+    locate: '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+    gotostats: '<svg viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="11" width="3" height="6"/><rect x="13" y="7" width="3" height="10"/></svg>'
+  };
+
+  function icon(kind) {
+    var span = el('span', '');
+    var svg = svgNode('svg', { viewBox: '0 0 24 24' });
+    (ICONS[kind] || []).forEach(function (p) { svg.appendChild(svgNode(p[0], p[1])); });
+    span.appendChild(svg);
+    return span;
+  }
+  function flowBar(r) {
+    var wrap = el('div', 'flowline');
+    var si = stageIndex(r['阶段']);
+    for (var i = 0; i < STAGES.length; i++) {
+      wrap.appendChild(el('i', i < si ? 'done' : (i === si ? 'done cur' : '')));
+    }
+    wrap.appendChild(el('em', '', (si + 1) + '/' + STAGES.length + ' ' + esc(r['阶段'] || '')));
+    return wrap;
+  }
+
+  /* ---- 统计：「数据统计」「月度统计」在「全部」页和每个阶段页都展示，口径一致 ---- */
+  function renderStats() {
+    var box = document.getElementById('statSection');
+    if (box) box.classList.remove('hide');
+    var mbox = document.getElementById('monthSection');
+    if (mbox) mbox.classList.remove('hide');
+    // 两条窄栏各只放一块统计，始终展开，别留空槽
+    var asides = document.querySelectorAll('main > .col-side');
+    Array.prototype.forEach.call(asides, function (a) { a.classList.remove('hide'); });
+
+    var agg = aggregate(statRows());
+    var all = aggregate(state.rows);
+
+    setStat('total', agg.total, String);
+    setStat('installed', agg.installed, String);
+    setStat('settled', agg.settled, String);
+
+    $('#emTotal').textContent = state.statScope === 'all' ? '全量口径' : '随筛选（全库 ' + all.total + '）';
+    $('#emInstalled').textContent = '点击 = 只看已安装';
+    $('#emSettled').textContent = '点击 = 只看已结清';
+
+    Array.prototype.forEach.call(document.querySelectorAll('.kpi'), function (k) {
+      var g = k.getAttribute('data-go');
+      var on = (g === 'reset' && !state.stage && !state.kw.trim()) ||
+               (g === 'installed' && state.stage === '已安装') ||
+               (g === 'settled' && state.stage === '已结清');
+      k.classList.toggle('on', !!on);
+    });
+
+    renderChart(agg.byStage);
+    renderMonthly(statRows());   // 月度统计跟统计区同一个口径，切阶段也不会变
+    renderYearly(statRows());    // 年度统计同上
+    renderManagerSuggest();
+  }
+  /** 候选设计师 = 固定名单 ∪ 订单里出现过的人名（去重排序），填单时下拉直接选 */
+  /** 「设计师」输入框候选项（整个名单）+「区域销售经理」候选项（订单里出现过的人） */
+  function renderManagerSuggest() {
+    var dBox = $('#designerList');
+    if (dBox) {
+      while (dBox.firstChild) dBox.removeChild(dBox.firstChild);
+      mergeDesigners().forEach(function (n) {
+        var o = document.createElement('option');
+        o.value = n;
+        dBox.appendChild(o);
+      });
+    }
+    var box = $('#mgrList');
+    if (!box) return;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    var seen = {};
+    state.rows.forEach(function (r) { var m = normName(r['区域销售经理']); if (m) seen[m] = 1; });
+    Object.keys(seen).sort(function (a, b) { return a.localeCompare(b, 'zh-Hans-CN'); }).forEach(function (n) {
+      var o = document.createElement('option');
+      o.value = n;
+      box.appendChild(o);
+    });
+  }
+  function setStat(key, value, fmt) {
+    var node = document.querySelector('[data-stat="' + key + '"]');
+    if (!node) return;
+    node.textContent = fmt(value);
+    bind(node);
+  }
+  function svgNode(tag, attrs) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) if (Object.prototype.hasOwnProperty.call(attrs, k)) n.setAttribute(k, String(attrs[k]));
+    return n;
+  }
+  /** 图表按所在栏的实际宽度出图（太宽不拉爆，太窄则保持原尺寸靠横向滚动） */
+  function chartW(box, fallback) {
+    var cw = box && box.clientWidth ? Math.round(box.clientWidth) : 0;
+    if (!cw) return fallback;              // jsdom / 隐藏状态下按默认出图
+    return Math.min(Math.max(cw, fallback), 820);
+  }
+  /** 窄栏（右栏 / 手机）里改用横条清单，比 9 根柱子挤成一团更清楚 */
+  function renderStageBars(counts, max) {
+    var box = $('#stageChart');
+    box.innerHTML = '';
+    STAGES.forEach(function (s) {
+      var v = Number(counts[s.name] || 0);
+      var row = el('div', 's-row' + (state.stage === s.name ? ' on' : ''));
+      row.setAttribute('data-stagebar', s.name);
+      row.setAttribute('style', 'cursor:pointer');
+      row.appendChild(el('span', 's-n', s.name));
+      var track = el('div', 's-track');
+      var fill = el('i', 's-fill');
+      fill.style.background = s.color;
+      fill.style.width = Math.round((v / max) * 100) + '%';
+      fill.style.opacity = v ? 0.92 : 0.2;
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(el('b', 's-v', String(v)));
+      box.appendChild(row);
+    });
+  }
+  function renderChart(counts) {
+    var box = $('#stageChart');
+    box.innerHTML = '';
+    var max = 1;
+    STAGES.forEach(function (s) { max = Math.max(max, Number(counts[s.name] || 0)); });
+    // 栏宽不到 560 就画横条清单，宽栏才画柱子
+    if (box.clientWidth && box.clientWidth < 560) { renderStageBars(counts, max); return; }
+    var w = chartW(box, 680), h = 210, pad = 26, bw = 62, base = h - 52;
+    var gap = (w - pad * 2 - bw * STAGES.length) / (STAGES.length - 1);
+    var unit = (base - 46) / max;
+    var svg = svgNode('svg', {
+      viewBox: '0 0 ' + w + ' ' + h, width: '100%', height: '212',
+      preserveAspectRatio: 'xMidYMid meet', role: 'img', 'aria-label': '各阶段订单数量'
+    });
+    svg.appendChild(svgNode('line', { x1: pad, y1: base, x2: w - pad, y2: base, stroke: '#ECE6DE', 'stroke-width': '1' }));
+    STAGES.forEach(function (s, i) {
+      var v = Number(counts[s.name] || 0);
+      var bh = Math.round(Math.max(4, v * unit));
+      var x = pad + i * (bw + gap), y = base - bh;
+      var g = svgNode('g', {});
+      g.setAttribute('data-stagebar', s.name);
+      g.setAttribute('style', 'cursor:pointer');
+      g.appendChild(svgNode('rect', {
+        x: x, y: y, width: bw, height: bh, rx: 6,
+        fill: s.color, opacity: v ? 0.92 : 0.25,
+        stroke: state.stage === s.name ? '#241F1A' : 'none', 'stroke-width': state.stage === s.name ? 2 : 0
+      }));
+      var num = svgNode('text', { x: x + bw / 2, y: y - 7, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: '#241F1A' });
+      num.textContent = String(v);
+      g.appendChild(num);
+      var lab = svgNode('text', { x: x + bw / 2, y: base + 18, 'text-anchor': 'middle', 'font-size': 12, fill: '#5C5248' });
+      lab.textContent = s.name;
+      g.appendChild(lab);
+      var hit = svgNode('rect', { x: x - gap / 2, y: 8, width: bw + gap, height: base - 8, fill: 'transparent' });
+      g.appendChild(hit);
+      svg.appendChild(g);
+    });
+    box.appendChild(svg);
+  }
+
+  /* ---- 月度统计：跟统计区同一个口径（只有数字和明细表，不放柱状图） ---- */
+  function monthTotals(rows) {
+    var c = 0, d = 0;
+    rows.forEach(function (r) { c += num(r['提成']); d += deductionOf(r); });
+    return { total: rows.length, ordered: rows.filter(isOrdered).length, commission: c, deduction: d, net: c - d };
+  }
+  function aggregateByMonth(rows) {
+    var m = {};
+    function get(k) { var o = m[k]; if (!o) o = m[k] = { month: k, count: 0, ordered: 0, commission: 0, deduction: 0, rework: 0 }; return o; }
+    rows.forEach(function (r) {
+      var rm = monthOf(r['接单日期']) || '未填月份';   // 订单总数 按「接单月」归（= 这个月接了多少单）
+      var ro = get(rm);
+      ro.count++;
+      // 「提成 / 扣款 / 整改」按「更新日期」所在月归，不看接单时间
+      // （没填更新日期时回退到「下单日期 → 接单月」，老数据零迁移）
+      var rc = get(updateMonthOf(r));
+      rc.commission += num(r['提成']);
+      rc.deduction += deductionOf(r);
+      rc.rework += rework(r);
+      // 「下单单数」按「下单日期」所在月统计（没填就退回接单月），不看接单时间
+      if (isOrdered(r)) get(orderMonthOf(r)).ordered++;
+    });
+    return Object.keys(m).sort().map(function (k) {
+      var o = m[k];
+      o.net = o.commission - o.deduction;
+      return o;
+    });
+  }
+  /** 按接单年汇总（年度统计用），字段与月度完全一致，方便两处对照 */
+  function aggregateByYear(rows) {
+    var m = {};
+    function get(k) { var o = m[k]; if (!o) o = m[k] = { year: k, count: 0, ordered: 0, commission: 0, deduction: 0, rework: 0 }; return o; }
+    rows.forEach(function (r) {
+      var ry = yearOf(r['接单日期']) || '未填年份';     // 订单总数 按「接单年」归
+      var ro = get(ry);
+      ro.count++;
+      // 「提成 / 扣款 / 整改」按「更新日期」所在年归，不看接单时间
+      var rc = get(updateYearOf(r));
+      rc.commission += num(r['提成']);
+      rc.deduction += deductionOf(r);
+      rc.rework += rework(r);
+      // 「下单单数」按「下单日期」所在年统计（没填就退回接年），不看接单时间
+      if (isOrdered(r)) get(orderYearOf(r)).ordered++;
+    });
+    return Object.keys(m).sort().map(function (k) {
+      var o = m[k];
+      o.net = o.commission - o.deduction;
+      return o;
+    });
+  }
+  /**
+   * 明细表排序：月份 / 年份这类「越新越值钱」的键统一倒序（最新排最上面）；
+   * 「未填月份 / 未填年份」这种兜底桶永远垫在最后，别因为汉字编码大反而跑到最上面。
+   * 注意：只用于明细表，柱体图仍按时间正序（左旧右新）画。
+   */
+  function recencyFirst(key, fallback) {
+    return function (a, b) {
+      var an = a[key] === fallback, bn = b[key] === fallback;
+      if (an !== bn) return an ? 1 : -1;
+      if (a[key] === b[key]) return 0;
+      return a[key] < b[key] ? 1 : -1;
+    };
+  }
+  function setYStat(key, value) {
+    var node = document.querySelector('[data-y="' + key + '"]');
+    if (node) node.textContent = value;
+  }
+  function renderYearly(rows) {
+    var tot = monthTotals(rows);          // 口径与月度统计完全一致的五个数
+    setYStat('ytotal', String(tot.total));
+    setYStat('yordered', String(tot.ordered));
+    setYStat('ycommission', money(tot.commission));
+    setYStat('ydeduction', money(tot.deduction));
+    setYStat('ynet', money(tot.net));
+    var list = aggregateByYear(rows);
+    renderYearOptions(list);
+    renderYearTable(list);
+    renderYearBars(list);
+  }
+  /**
+   * 年度柱体：净额一排、扣款一排
+   * 口径与月度柱体一致（同一排横着比，各排用自己的高度尺），
+   * 这样能一眼看出哪一年净额最高 / 哪一年扣款最多；同一根竖线代表同一年
+   */
+  function renderYearBars(list) {
+    var netBox = $('#yNetAxis');
+    var dedBox = $('#yDedAxis');
+    var foot = $('#yearBarFoot');
+    if (!netBox || !dedBox) return;
+    netBox.innerHTML = '';
+    dedBox.innerHTML = '';
+    if (foot) foot.innerHTML = '';
+    if (!list || !list.length) {
+      netBox.appendChild(el('div', 'mb-empty', '暂无可对比的年份'));
+      dedBox.appendChild(el('div', 'mb-empty', '暂无可对比的年份'));
+      return;
+    }
+    var maxNet = 0, maxDed = 0;
+    list.forEach(function (o) {
+      maxNet = Math.max(maxNet, num(o.net));
+      maxDed = Math.max(maxDed, num(o.deduction));
+    });
+    list.forEach(function (o) {
+      var yr = o.year;
+      var tag = (yr && yr !== '未填年份') ? yr.slice(2) + '年' : '未填';
+      var p1 = maxNet > 0 && num(o.net) === maxNet;
+      var p2 = maxDed > 0 && num(o.deduction) === maxDed;
+      // 净额排
+      var s1 = el('div', 'mb-slot' + (state.year === yr ? ' on' : ''));
+      s1.setAttribute('data-ybar', yr);
+      s1.setAttribute('title', yr + ' · 净额 ' + money(o.net) + (p1 ? ' · 净额最高' : ''));
+      var b1 = el('i', 'mb-bar' + (p1 ? ' peak' : ''));
+      b1.style.height = (maxNet > 0 ? Math.max(2, Math.round(num(o.net) / maxNet * 100)) : 0) + '%';
+      s1.appendChild(b1);
+      netBox.appendChild(s1);
+      // 扣款排
+      var s2 = el('div', 'mb-slot' + (state.year === yr ? ' on' : ''));
+      s2.setAttribute('data-ybar', yr);
+      s2.setAttribute('title', yr + ' · 扣款 ' + money(o.deduction) + (p2 ? ' · 扣款最多' : ''));
+      var b2 = el('i', 'mb-bar' + (p2 ? ' peak' : ''));
+      b2.style.height = (maxDed > 0 ? Math.max(2, Math.round(num(o.deduction) / maxDed * 100)) : 0) + '%';
+      s2.appendChild(b2);
+      dedBox.appendChild(s2);
+      // 年份脚注：两排共用一行
+      if (foot) {
+        var f = el('div', 'mb-slotf', tag);
+        f.setAttribute('data-ybarf', yr);
+        foot.appendChild(f);
+      }
+    });
+  }
+  function renderYearOptions(list) {
+    var sel = $('#yearSel');
+    if (!sel) return;
+    var cur = state.year;
+    sel.innerHTML = '';
+    var all = document.createElement('option');
+    all.value = ''; all.textContent = '全部年份';
+    sel.appendChild(all);
+    // 跟明细表一个规矩：最新年份排在最上面
+    list = list.slice().sort(recencyFirst('year', '未填年份'));
+    list.forEach(function (o) {
+      if (o.year === '未填年份') return;
+      var op = document.createElement('option');
+      op.value = o.year;
+      op.textContent = o.year + '年（' + o.count + ' 单）';
+      sel.appendChild(op);
+    });
+    sel.value = cur;
+    if (sel.value !== cur) state.year = '';   // 年份没了（比如删完单）就回落到全部
+  }
+  function yearFocus(year) {
+    state.year = (state.year === year) ? '' : year;
+    state.focusId = '';
+    refreshAll();
+    toast(state.year ? '只看 ' + state.year + ' 年接的单' : '已看全部年份');
+  }
+  function renderYearTable(list) {
+    var box = $('#yearTable');
+    box.innerHTML = '';
+    if (!list.length) {
+      var none = el('div', 'm-row');
+      none.appendChild(el('div', 'm-c c-mo', '暂无年度数据'));
+      box.appendChild(none);
+      return;
+    }
+    var LABELS = ['订单总数', '下单单数', '提成', '扣款', '净额'];
+    // 跟月度表一个规矩：最新的年份排最上面
+    list = list.slice().sort(recencyFirst('year', '未填年份'));
+    list.forEach(function (o) {
+      var row = el('div', 'm-row pick' + (state.year === o.year ? ' on' : ''));
+      row.setAttribute('data-ystat', o.year);
+      row.appendChild(el('div', 'm-c c-mo', o.year + '年'));
+      [String(o.count), String(o.ordered), money(o.commission), money(o.deduction), money(o.net)]
+        .forEach(function (v, i) {
+          var c = el('div', 'm-c c' + (i + 1));
+          c.appendChild(el('i', '', LABELS[i]));
+          c.appendChild(el('b', '', v));
+          row.appendChild(c);
+        });
+      box.appendChild(row);
+    });
+  }
+  function setMStat(key, value) {
+    var node = document.querySelector('[data-m="' + key + '"]');
+    if (node) node.textContent = value;
+  }
+  /**
+   * 月度柱体：净额一排、扣款一排
+   * 每排各用自己的高度尺（净额排按「这一年的月份里净额的最大值」、扣款排同理），
+   * 这样在「同一年」里横着比，哪个月净额最高 / 哪个月扣款最多一眼看得出。
+   * 横轴按接单年分段：一年里的月份连成一段接在一起，年与年之间插一条竖虚线 + 年份，
+   * 避免 2025 的 06月 和 2026 的 06月 混在同一根柱子（同号不同年）上比。
+   * 两排之间高度不互相比较（净额和扣款本来就不该比大小），同一根竖线代表同一个月。
+   */
+  function renderMonthBars(list) {
+    var netBox = $('#mbNetAxis');
+    var dedBox = $('#mbDedAxis');
+    var foot = $('#monthBarFoot');
+    if (!netBox || !dedBox) return;
+    netBox.innerHTML = '';
+    dedBox.innerHTML = '';
+    if (foot) foot.innerHTML = '';
+    if (!list || !list.length) {
+      netBox.appendChild(el('div', 'mb-empty', '暂无可对比的月份'));
+      dedBox.appendChild(el('div', 'mb-empty', '暂无可对比的月份'));
+      return;
+    }
+    // 按接单年切段（list 本身按月升序，切出来自然是一年接一年）
+    var groups = [], cur = null;
+    list.forEach(function (o) {
+      var y = o.month.slice(0, 4);
+      if (!cur || cur.year !== y) { cur = { year: y, items: [] }; groups.push(cur); }
+      cur.items.push(o);
+    });
+    groups.forEach(function (g, gi) {
+      // 每一段（这一年）单独框出来：柱排前后各一条竖虚线，脚注位置写这一年的年份，
+      // 这样左边一段是哪一年、跟哪几个月一组，一眼对得上
+      netBox.appendChild(el('div', 'mb-gap'));
+      dedBox.appendChild(el('div', 'mb-gap'));
+      if (foot) {
+        var gf = el('div', 'mb-gf', g.year);
+        gf.setAttribute('data-myear', g.year);
+        gf.setAttribute('title', '只看 ' + g.year + ' 年的月份');
+        foot.appendChild(gf);
+      }
+      // 这一段（这一年）内部的高度尺：只跟自己年里的月份比
+      var maxNet = 0, maxDed = 0;
+      g.items.forEach(function (o) {
+        maxNet = Math.max(maxNet, num(o.net));
+        maxDed = Math.max(maxDed, num(o.deduction));
+      });
+      g.items.forEach(function (o) {
+        var mo = o.month;
+        // 净额排
+        var s1 = el('div', 'mb-slot' + (state.month === mo ? ' on' : ''));
+        s1.setAttribute('data-mbar', mo);
+        var p1 = maxNet > 0 && num(o.net) === maxNet;
+        s1.setAttribute('title', mo + ' · 净额 ' + money(o.net) + (p1 ? ' · 净额最高' : ''));
+        var b1 = el('i', 'mb-bar' + (p1 ? ' peak' : ''));
+        b1.style.height = (maxNet > 0 ? Math.max(2, Math.round(num(o.net) / maxNet * 100)) : 0) + '%';
+        s1.appendChild(b1);
+        netBox.appendChild(s1);
+        // 扣款排
+        var s2 = el('div', 'mb-slot' + (state.month === mo ? ' on' : ''));
+        s2.setAttribute('data-mbar', mo);
+        var p2 = maxDed > 0 && num(o.deduction) === maxDed;
+        s2.setAttribute('title', mo + ' · 扣款 ' + money(o.deduction) + (p2 ? ' · 扣款最多' : ''));
+        var b2 = el('i', 'mb-bar' + (p2 ? ' peak' : ''));
+        b2.style.height = (maxDed > 0 ? Math.max(2, Math.round(num(o.deduction) / maxDed * 100)) : 0) + '%';
+        s2.appendChild(b2);
+        dedBox.appendChild(s2);
+        // 月份脚注：两排共用一行，跟着柱子走
+        if (foot) {
+          var f = el('div', 'mb-slotf', mo.slice(5) + '月');
+          f.setAttribute('data-mbarf', mo);
+          foot.appendChild(f);
+        }
+      });
+    });
+  }
+  function renderMonthly(rows) {
+    var tot = monthTotals(rows);
+    setMStat('mtotal', String(tot.total));
+    setMStat('mordered', String(tot.ordered));
+    setMStat('mcommission', money(tot.commission));
+    setMStat('mdeduction', money(tot.deduction));
+    setMStat('mnet', money(tot.net));
+    var list = aggregateByMonth(rows);
+    renderMonthOptions(list);
+    renderMonthTable(list);
+    renderMonthBars(list);
+  }
+  function renderMonthOptions(list) {
+    var sel = $('#monthSel');
+    if (!sel) return;
+    var cur = state.month;
+    sel.innerHTML = '';
+    var all = document.createElement('option');
+    all.value = ''; all.textContent = '全部月份';
+    sel.appendChild(all);
+    // 跟明细表一个规矩：最新月份排在最上面
+    list = list.slice().sort(recencyFirst('month', '未填月份'));
+    list.forEach(function (o) {
+      if (o.month === '未填月份') return;
+      var op = document.createElement('option');
+      op.value = o.month;
+      op.textContent = o.month.slice(0, 4) + '年' + o.month.slice(5) + '月';
+      sel.appendChild(op);
+    });
+    // 当前选的月份若不在列表里（比如删完单），回落到「全部月份」
+    sel.value = cur;
+    if (sel.value !== cur) state.month = '';
+  }
+  function monthFocus(month) {
+    state.month = (state.month === month) ? '' : month;
+    state.focusId = '';
+    refreshAll();
+    toast(state.month ? '只看 ' + state.month + ' 接的单' : '已看全部月份');
+  }
+  /** 月度明细区：固定只露 3 个月，多出来的在 #monthScroll 里下滑；选中的月份滚回可见处 */
+  var MONTH_VISIBLE = 3;
+  function fitMonthScroll(list) {
+    var sbox = $('#monthScroll');
+    var hint = $('#monthMore');
+    if (!sbox) return;
+    var box = $('#monthTable');
+    var rows = box ? box.children : [];
+    var over = !!list && list.length > MONTH_VISIBLE;
+    // 只有真的放不下才提示「下滑看更多」，放得下就别多一行字
+    if (hint) hint.classList.toggle('on', over && !!rows.length);
+    if (!rows.length) return;
+    if (!over) { sbox.style.maxHeight = ''; return; }
+    sbox.style.maxHeight = '';                       // 先还原，才量得到没截过的真实行高
+    var h = 0;
+    for (var i = 0; i < MONTH_VISIBLE; i++) h += rows[i].offsetHeight;
+    if (h > 0) sbox.style.maxHeight = Math.ceil(h) + 'px';   // 正好三整行，不留半截
+    var act = box.querySelector('.m-row.on');        // 选中的月份，滚进可视区
+    if (act && sbox.scrollHeight > sbox.clientHeight + 1) {
+      try { act.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+    }
+  }
+  function renderMonthTable(list) {
+    var box = $('#monthTable');
+    box.innerHTML = '';
+    if (!list.length) {
+      var none = el('div', 'm-row');
+      none.appendChild(el('div', 'm-c c-mo', '暂无月度数据'));
+      box.appendChild(none);
+      var sb = $('#monthScroll');
+      if (sb) sb.style.maxHeight = '';
+      var hm = $('#monthMore');
+      if (hm) hm.classList.remove('on');
+      return;
+    }
+    // 月份倒序：最新的月份排最上面，打开就先看到最近几个月，不用往下滑找最新
+    // （下面的柱体图仍然是时间正序，左旧右新，两张图各自好读）
+    list = list.slice().sort(recencyFirst('month', '未填月份'));
+    // 行内每个指标都带自己的小标签，表头与数据同构，窄栏折两列也不会错位
+    var LABELS = ['订单总数', '下单单数', '提成', '扣款', '净额'];
+    list.forEach(function (o) {
+      var row = el('div', 'm-row pick' + (state.month === o.month ? ' on' : ''));
+      row.setAttribute('data-mstat', o.month);
+      row.appendChild(el('div', 'm-c c-mo', o.month));
+      [String(o.count), String(o.ordered), money(o.commission), money(o.deduction), money(o.net)]
+        .forEach(function (v, i) {
+          var c = el('div', 'm-c c' + (i + 1));
+          c.appendChild(el('i', '', LABELS[i]));
+          c.appendChild(el('b', '', v));
+          row.appendChild(c);
+        });
+      box.appendChild(row);
+    });
+    fitMonthScroll(list);
+  }
+
+  var scrollTarget = '';        // 正在滚动定位的订单 id，避免渲染递归闪烁
+  function focusRow(id, silent) {
+    var row = findRow(id);
+    if (!row) return;
+    // 自动解除会挡住这张卡的筛选条件
+    if (state.stage && row['阶段'] !== state.stage) state.stage = row['阶段'] || '';
+    if (state.kw.trim() && !matchKw(row)) state.kw = '';
+    state.focusId = id;
+    scrollTarget = id;
+    refreshAll();
+    if (!silent) toast('已定位到「' + (row['客户姓名'] || '未命名客户') + '」');
+    setTimeout(function () { scrollTarget = null; }, 60);
+  }
+  function scrollTo(node) {
+    if (node && typeof node.scrollIntoView === 'function') {
+      try { node.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { node.scrollTop && 0; }
+    }
+  }
+  function flashRow(id) {
+    setTimeout(function () {
+      var node = document.querySelector('.o-card[data-id="' + id + '"]');
+      if (!node) return;
+      scrollTo(node);
+      node.classList.add('flash');
+      setTimeout(function () { node.classList.remove('flash'); }, 1600);
+    }, 40);
+  }
+  function gotoStage(name) {
+    state.stage = (state.stage === name) ? '' : name;
+    state.focusId = '';
+    refreshAll();
+  }
+
+  /* ---------------- 动作 ---------------- */
+  function advanceRow(id) {
+    var row = findRow(id);
+    if (!row) return;
+    var si = stageIndex(row['阶段']);
+    if (si < 0) si = 0;
+    // 主流程到「已安装」为止，「已结清」算收尾完成，「退单」不参与推进
+    if (si >= FLOW_END) { toast(si === STAGES.length - 1 ? '「退单」是终态，不再往后推进' : '「已结清」已收尾，可改标「退单」或编辑阶段'); return; }
+    var nextName = STAGES[si + 1].name;
+    var props = { '阶段': { select: optionIdByText(nextName) || nextName } };
+    // 每次推进都刷新「更新日期」= 当天（最近一次操作的时间）
+    props['更新日期'] = { date: todayISO() };
+    // 第一次推进到「已下单」时，记下「下单日期」= 当天；以后月度「下单单数」就按这个日期归月，不看接单时间
+    // （「下单日期」只在首次进「已下单」时写一次，后续推进不再改写，保证下单单数归月稳定）
+    if (nextName === '已下单' && !row['下单日期']) props['下单日期'] = { date: todayISO() };
+    askConfirm('把「' + esc(row['客户姓名']) + '」从「' + esc(row['阶段']) + '」推进到「' + nextName + '」？', '推进', function () {
+      saveRecord(props, id)
+        .then(function () {
+          state.stage = nextName;         // 跟着跳到新阶段，马上能看到它
+          state.focusId = id;
+          refreshAll(); flashRow(id);
+          toast('已推进到「' + nextName + '」');
+        })
+        .catch(function (err) { console.error('[order] 推进失败:', err); toast('推进失败，请重试'); });
+    });
+  }
+  function backRow(id) {
+    var row = findRow(id);
+    if (!row) return;
+    var si = stageIndex(row['阶段']);
+    if (si <= 0) { toast('已是第一个阶段'); return; }
+    if (si >= STAGES.length - 1) { toast('「退单」是终态，要恢复请到编辑里改阶段'); return; }
+    var prevName = STAGES[si - 1].name;
+    askConfirm('把「' + esc(row['客户姓名']) + '」回退到「' + prevName + '」？', '回退', function () {
+      var sid = optionIdByText(prevName) || prevName;
+      saveRecord({ '阶段': { select: sid }, '更新日期': { date: todayISO() } }, id)
+        .then(function () { state.stage = prevName; state.focusId = id; refreshAll(); flashRow(id); })
+        .catch(function (err) { console.error('[order] 回退失败:', err); toast('回退失败，请重试'); });
+    });
+  }
+  function markFollowToday(id) {
+    var row = findRow(id);
+    if (!row) return;
+    saveRecord({ '跟进日期': { date: todayISO() } }, id)
+      .then(function () {
+        state.focusId = id;
+        refreshAll();
+        if (scrollTarget !== id) flashRow(id);
+        toast('已把「' + (row['客户姓名'] || '未命名客户') + '」的下次跟进设为今天');
+      })
+      .catch(function (err) { console.error('[order] 更新跟进日期失败:', err); toast('保存失败，请重试'); });
+  }
+  function delRow(id) {
+    var row = findRow(id);
+    if (!row) return;
+    askConfirm('确定删除「' + esc(row['客户姓名']) + '」的订单？删除后不可恢复。', '删除', function () {
+      removeRecord(id).then(function () {
+        if (state.focusId === id) state.focusId = '';
+        refreshAll();
+      }).catch(function (err) { console.error('[order] 删除失败:', err); toast('删除失败，请重试'); });
+    });
+  }
+  function markRefund(id) {
+    var row = findRow(id);
+    if (!row) return;
+    if (row['阶段'] === '退单') { toast('这条已经是退单了'); return; }
+    askConfirm('把「' + esc(row['客户姓名']) + '」标为「退单」？退单后不再进入「今天要处理」，该单的提成与扣款仍保留在订单上。', '标记退单', function () {
+      var sid = optionIdByText('退单') || '退单';
+      saveRecord({ '阶段': { select: sid } }, id)
+        .then(function () {
+          state.stage = '退单';
+          state.focusId = id;
+          loadData().then(function () { flashRow(id); });
+          toast('已标为「退单」');
+        })
+        .catch(function (err) { console.error('[order] 标记退单失败:', err); toast('标记失败，请重试'); });
+    });
+  }
+  function toggleDetail(id) {
+    var row = findRow(id);
+    var det = document.getElementById('det-' + id);
+    if (!row || !det) return;
+    det.classList.toggle('hide');
+  }
+  function locateToday(id) {
+    var row = findRow(id);
+    if (!row) return;
+    if (state.todayScope !== 'all' && !matchKw(row)) state.todayScope = 'all';
+    state.focusId = id;
+    refreshAll();
+    setTimeout(function () {
+      var node = document.querySelector('.t-item.focus');
+      if (node) { scrollTo(node); flashRow(id); }
+      else toast('这条今天没出现在待办里（可能已安装或没填跟进日期）', 2400);
+    }, 40);
+  }
+  function gotoStats() {
+    var sec = document.getElementById('statSection') || document.querySelectorAll('main .card')[2];
+    scrollTo(sec);
+    toast('统计口径：' + (state.statScope === 'all' ? '全部数据' : '跟随筛选'));
+  }
+  function clearSeed() {
+    var ids = state.rows.filter(function (r) { return r['示例数据'] === true; }).map(function (r) { return r._id; });
+    if (!ids.length) { toast('没有示例数据了'); return; }
+    askConfirm('将删除 ' + ids.length + ' 条示例数据，你自己录入的订单不受影响。', '清空', function () {
+      var chain = Promise.resolve();
+      ids.forEach(function (id) { chain = chain.then(function () { return removeRecord(id); }); });
+      chain.then(function () { toast('示例数据已清空'); loadData(); })
+        .catch(function (err) { console.error('[order] 清空失败:', err); toast('清空失败，请重试'); });
+    });
+  }
+  function resetFilters() {
+    state.stage = ''; state.kw = ''; state.focusId = '';
+    state.year = ''; state.month = '';
+    $('#kw').value = '';
+    if ($('#yearSel')) $('#yearSel').value = '';
+    if ($('#monthSel')) $('#monthSel').value = '';
+    refreshAll();
+    toast('筛选已重置');
+  }
+  /**
+   * 导出完整备份：订单 + 账号 + 设计师名单 + 标题。
+   * 只有这才是「换电脑 / 换网站 / 发给同事」时真正够用的东西 —— 光导订单，账号会丢。
+   */
+  function buildBackup() {
+    return {
+      v: 1,
+      type: 'wardrobe-workbench-backup',
+      at: todayISO(),
+      title: (($('#shopTitle') && $('#shopTitle').textContent) || '').trim(),
+      designers: getDesigners(),
+      accounts: getAccounts(),
+      rows: (state.statScope === 'all' ? state.rows : filteredRows()).map(function (r) {
+        return {
+          '客户姓名': r['客户姓名'] || '', '阶段': r['阶段'] || '', '联系电话': r['联系电话'] || '',
+          '小区地址': r['小区地址'] || '', '金额': r['金额'] || 0, '区域销售经理': r['区域销售经理'] || '', '设计师': r['设计师'] || '',
+          '提成': r['提成'] || 0, '补件扣款': r['补件扣款'] || 0, '整改扣款': r['整改扣款'] || 0,
+          '接单日期': dayOnly(r['接单日期']), '下单日期': dayOnly(r['下单日期']), '更新日期': dayOnly(r['更新日期']),
+          '跟进日期': dayOnly(r['跟进日期']), '备注': r['备注'] || ''
+        };
+      })
+    };
+  }
+  function downloadJSON(name, obj) {
+    var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function exportJSON() {
+    try {
+      var bk = buildBackup();
+      downloadJSON('定制衣柜工作台备份_' + todayISO() + '.json', bk);
+      toast('已导出备份：' + bk.rows.length + ' 条订单、' + bk.accounts.length + ' 个账号');
+    } catch (e) { toast('导出失败，请换个浏览器重试'); }
+  }
+  /** 订单去重键：同名同电话同接单日视为同一单，导入时跳过，避免重复导入把数字翻倍 */
+  function rowKey(r) {
+    return [normName(r['客户姓名']), normName(r['联系电话']), dayOnly(r['接单日期'])].join('|');
+  }
+  /** 一行订单 → 云端/本地库认识的 properties（导入时复用，省得再写一遍字段映射） */
+  function rowToProps(r) {
+    var p = {
+      '客户姓名': { text: r['客户姓名'] || '' },
+      '联系电话': { text: r['联系电话'] || '' },
+      '小区地址': { text: r['小区地址'] || '' },
+      '金额': { currency: Number(r['金额'] || 0) },
+      '设计师': { text: r['设计师'] || '' },
+      '区域销售经理': { text: r['区域销售经理'] || '' },
+      '提成': { currency: Number(r['提成'] || 0) },
+      '补件扣款': { currency: Number(r['补件扣款'] || 0) },
+      '整改扣款': { currency: Number(r['整改扣款'] || 0) },
+      '备注': { text: r['备注'] || '' },
+      '阶段': { select: optionIdByText(r['阶段'] || '新增订单') || '新增订单' }
+    };
+    if (r['接单日期']) p['接单日期'] = { date: dayOnly(r['接单日期']) };
+    if (r['下单日期']) p['下单日期'] = { date: dayOnly(r['下单日期']) };
+    if (r['更新日期']) p['更新日期'] = { date: dayOnly(r['更新日期']) };
+    if (r['跟进日期']) p['跟进日期'] = { date: dayOnly(r['跟进日期']) };
+    return p;
+  }
+  /** 导入备份：订单按去重键合并（已有的跳过），账号按用户名合并，名单取并集 —— 不会冲掉现有数据 */
+  function applyBackup(bk, onDone) {
+    var newRows = [], skipped = 0;
+    var have = {};
+    state.rows.forEach(function (r) { have[rowKey(r)] = 1; });
+    (bk.rows || []).forEach(function (r) {
+      if (!r || !normName(r['客户姓名'])) return;
+      var k = rowKey(r);
+      if (k !== '||' && have[k]) { skipped++; return; }
+      have[k] = 1;
+      newRows.push(r);
+    });
+
+    // 账号 / 名单 / 标题：先落本地，再试云端
+    var accAdded = 0;
+    var accs = getAccounts();
+    (bk.accounts || []).forEach(function (a) {
+      if (!a || !a.u) return;
+      if (accs.some(function (x) { return x.u === a.u; })) return;
+      accs.push(a); accAdded++;
+    });
+    if (accAdded) saveAccounts(accs);
+    var dsAdded = 0;
+    var ds = getDesigners();
+    (bk.designers || []).forEach(function (n) {
+      n = normName(n);
+      if (n && ds.indexOf(n) < 0) { ds.push(n); dsAdded++; }
+    });
+    if (dsAdded) saveDesigners(ds);
+    if (bk.title) applyTitle(bk.title);
+
+    // 订单一条条写（本地库或云端库都走同一条路），写完重新拉一次
+    var i = 0, failed = 0;
+    function step() {
+      if (i >= newRows.length) {
+        loadData().then(function () {
+          renderOwnerBar(); refreshAll();
+          toast('导入完成：新增 ' + (newRows.length - failed) + ' 条订单'
+            + (skipped ? '，跳过 ' + skipped + ' 条重复' : '')
+            + (accAdded ? '，新增 ' + accAdded + ' 个账号' : '')
+            + (failed ? '，' + failed + ' 条写入失败' : ''));
+          if (typeof onDone === 'function') onDone();
+        });
+        return;
+      }
+      var r = newRows[i++];
+      db.addRecord({ databaseId: DATABASE_ID, properties: rowToProps(r) })
+        .then(step, function () { failed++; step(); });
+    }
+    step();
+  }
+  function importFromFile(file) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var data;
+      try { data = JSON.parse(String(fr.result)); }
+      catch (e) { toast('这个文件不是有效的备份，请选择导出的 JSON'); return; }
+      // 兼容老备份（直接是订单数组）
+      var bk = Array.isArray(data) ? { rows: data } : data;
+      if (!bk || !Array.isArray(bk.rows)) { toast('备份里没有订单数据，换一个文件试试'); return; }
+      var n = (bk.rows || []).length;
+      askConfirm('导入备份里的 ' + n + ' 条订单' + ((bk.accounts || []).length ? '和 ' + (bk.accounts || []).length + ' 个账号' : '')
+        + '？已有的订单不会被覆盖，重复的会自动跳过。', '导入', function () { applyBackup(bk); });
+    };
+    fr.onerror = function () { toast('读取文件失败，换一个文件试试'); };
+    fr.readAsText(file);
+  }
+
+  /* ---------------- 表单 ---------------- */
+  var DRAFT_KEY = 'wb_wardrobe_draft_v1', draftTimer = null;
+  var FORM_FIELDS = [
+    { key: 'customer', sel: '[name="customer"]' },
+    { key: 'address', sel: '[name="address"]' },
+    { key: 'manager', sel: '[name="manager"]' },
+    { key: 'commission', sel: '[name="commission"]' },
+    { key: 'deduction', sel: '[name="deduction"]' },
+    { key: 'rework', sel: '[name="rework"]' },
+    { key: 'stage', sel: '[name="stage"]' },
+    { key: 'orderDate', sel: '[name="orderDate"]' },
+    { key: 'followDate', sel: '[name="followDate"]' },
+    { key: 'remark', sel: '[name="remark"]' }
+  ];
+  function renderSelectOptions() {
+    var sel = $('#f-stage');
+    sel.innerHTML = '<option value="">请选择</option>';
+    (SCHEMA_OPTIONS['阶段'] || []).forEach(function (o) { var n = el('option', '', o.text); n.value = o.id; sel.appendChild(n); });
+  }
+  /**
+   * 数据表里的「阶段」下拉选项补齐到 STAGES 为止。
+   * 本地新增的「待确认」还没进云端表的选项列表时，表单也能选它、存得进去，
+   * 云端选项里已有的阶段（比如「已下单」）仍然保留它自己的 id，不动。
+   */
+  function ensureStageOptions() {
+    var opts = SCHEMA_OPTIONS['阶段'] || [];
+    if (!opts.length) opts = [];
+    var byText = {};
+    opts.forEach(function (o) { byText[o.text] = o; });
+    STAGES.forEach(function (s) {
+      if (!byText[s.name]) opts.push({ id: s.name, text: s.name });
+    });
+    SCHEMA_OPTIONS['阶段'] = opts;
+  }
+  function cacheDraft() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () {
+      try {
+        var d = {};
+        FORM_FIELDS.forEach(function (f) { var n = document.querySelector(f.sel); if (n) d[f.key] = n.value; });
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+      } catch (e) {}
+    }, 300);
+  }
+  function clearDraft() {
+    clearTimeout(draftTimer);
+    try { window.localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  }
+  function hasContent(d) {
+    if (!d) return false;
+    var ks = Object.keys(d);
+    for (var i = 0; i < ks.length; i++) if (d[ks[i]]) return true;
+    return false;
+  }
+  function restoreDraft() {
+    var d = null;
+    try { d = JSON.parse(window.localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { d = null; }
+    if (!hasContent(d)) return;
+    FORM_FIELDS.forEach(function (f) { var n = document.querySelector(f.sel); if (n && d[f.key]) n.value = d[f.key]; });
+  }
+  function openSheet(id) {
+    var row = id ? findRow(id) : null;
+    state.editId = row ? id : '';
+    $('#sheetTitle').textContent = row ? '编辑订单 · ' + esc(row['客户姓名']) : '新增订单';
+    $('#btnDelete').classList.toggle('hide', !row);
+    $('#f-customer').value = row ? esc(row['客户姓名']) : '';
+    $('#f-address').value = row ? esc(row['小区地址']) : '';
+    // 新增时自动带上当前身份（设计师视角下单不用再选一次自己）；编辑时保持原值
+    $('#f-designer').value = row ? esc(row['设计师']) : esc(state.owner);
+    $('#f-manager').value = row ? esc(row['区域销售经理']) : '';
+    $('#f-commission').value = row && row['提成'] !== null && row['提成'] !== undefined ? String(row['提成']) : '';
+    // 老数据只有「扣款」时，把它原样带进「补件扣款」，整改扣款留空，避免旧数字一保存就归零
+    var dVal = '';
+    if (row) {
+      if (row['补件扣款'] !== undefined && row['补件扣款'] !== null && String(row['补件扣款']) !== '') dVal = row['补件扣款'];
+      else if (row[LEGACY_DED] !== undefined && row[LEGACY_DED] !== null && String(row[LEGACY_DED]) !== '') dVal = row[LEGACY_DED];
+    }
+    $('#f-deduction').value = String(dVal);
+    $('#f-rework').value = row && row['整改扣款'] !== null && row['整改扣款'] !== undefined ? String(row['整改扣款']) : '';
+    $('#f-remark').value = row ? esc(row['备注']) : '';
+    $('#f-orderDate').value = row ? dayOnly(row['接单日期']) : todayISO();
+    $('#f-followDate').value = row ? dayOnly(row['跟进日期']) : '';
+    $('#f-orderPlacedDate').value = row ? dayOnly(row['下单日期']) : '';
+    // 「更新日期」：无论新增还是编辑都默认今天 —— 一保存就刷新成当天（最近一次修改）
+    $('#f-updateDate').value = todayISO();
+    $('#f-stage').value = row ? optionIdByText(row['阶段']) : '';
+    if (!row) restoreDraft();
+    if (!$('#f-stage').value) {
+      var opts = SCHEMA_OPTIONS['阶段'] || [];
+      for (var k = 0; k < opts.length; k++) if (opts[k].text === '新增订单') { $('#f-stage').value = opts[k].id; break; }
+    }
+    $('#mask').classList.add('on');
+    $('#sheet').classList.add('on');
+  }
+  function closeSheet() {
+    $('#mask').classList.remove('on');
+    $('#sheet').classList.remove('on');
+    state.editId = '';
+  }
+  function submitForm() {
+    var btn = $('#btnSave');
+    var props = {};
+    var customer = $('#f-customer').value.trim();
+    if (!customer) { toast('请填写客户姓名'); $('#f-customer').focus(); return; }
+    props['客户姓名'] = { text: customer };
+    props['小区地址'] = { text: $('#f-address').value.trim() };
+    props['区域销售经理'] = { text: $('#f-manager').value.trim() };
+    props['设计师'] = { text: $('#f-designer').value.trim() };
+    var cm = $('#f-commission').value.trim();
+    props['提成'] = { currency: cm ? Number(cm) : 0 };
+    var dc = $('#f-deduction').value.trim();
+    props['补件扣款'] = { currency: dc ? Number(dc) : 0 };
+    var rc = $('#f-rework').value.trim();
+    props['整改扣款'] = { currency: rc ? Number(rc) : 0 };
+    // 联系电话 / 订单金额已不在表单里，但编辑时不能把它们抹成空：
+    // 原记录有的就原样带回，没有的才写 0
+    var old = state.editId ? findRow(state.editId) : null;
+    if (old) {
+      props['联系电话'] = { text: old['联系电话'] || '' };
+      props['金额'] = { currency: Number(old['金额'] || 0) };
+    }
+    var st = $('#f-stage').value;
+    var stageName = '';
+    (SCHEMA_OPTIONS['阶段'] || []).forEach(function (o) { if (o.id === st) stageName = o.text; });
+    props['阶段'] = { select: st ? st : '新增订单' };
+    var od = $('#f-orderDate').value, fd = $('#f-followDate').value;
+    if (od) props['接单日期'] = { date: od };
+    if (fd) props['跟进日期'] = { date: fd };
+    // 「下单日期」：手动填了就用填的；阶段已到「已下单」及以后且原本没有，就自动记成今天
+    var opd = $('#f-orderPlacedDate').value;
+    var oldRow = state.editId ? findRow(state.editId) : null;
+    if (opd) props['下单日期'] = { date: opd };
+    else if (stageIndex(stageName || '新增订单') >= ORDERED_AT && !(oldRow && oldRow['下单日期'])) props['下单日期'] = { date: todayISO() };
+    // 「更新日期」：每次保存都记成当天（自动跟踪最近一次修改）；用户手动填了别的日期就尊重填的
+    var upd = $('#f-updateDate').value;
+    props['更新日期'] = { date: upd || todayISO() };
+    props['备注'] = { text: $('#f-remark').value.trim() };
+
+    btn.disabled = true; btn.textContent = '保存中…';
+    // 增 / 改两条分支必须在 saveRecord 之前就定下来：
+    // 保存成功后 closeSheet() 会清掉 state.editId，届时无法再区分是新增还是编辑
+    var wasEdit = !!state.editId;
+    var editId = state.editId;
+    saveRecord(props, state.editId)
+      .then(function (newId) {
+        var rid = wasEdit ? editId : newId;
+        clearDraft(); closeSheet();
+        var sid = st || '';
+        var name = '';
+        (SCHEMA_OPTIONS['阶段'] || []).forEach(function (o) { if (o.id === sid) name = o.text; });
+
+        if (!wasEdit) {
+          // 新增：自动跳到它所属阶段并高亮
+          state.stage = name || '';
+          state.focusId = rid;
+          toast('订单已新增，已跳到「' + (name || '全部') + '」');
+          loadData().then(function () { flashRow(rid); });   // 先回读新数据，再定位高亮
+          return;
+        }
+        // 编辑：只在它不再匹配当前阶段筛选时，才跟着跳到它的新阶段
+        var row = rid ? findRow(rid) : null;
+        if (row && state.stage && state.stage !== '' && row['阶段'] !== state.stage) state.stage = row['阶段'] || '';
+        state.focusId = rid;
+        toast('已更新');
+        loadData().then(function () { rid && flashRow(rid); });
+      })
+      .catch(function (err) {
+        console.error('[order] 保存失败:', err);
+        setSync('offline');
+        toast('保存失败，请重试（若在资料库中打开请确认已登录）');
+      })
+      .then(function () { btn.disabled = false; btn.textContent = '保存'; });
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  function closest(node, attr) {
+    while (node && node !== document) {
+      if (node.getAttribute && node.getAttribute(attr) !== null) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+  function bindEvents() {
+    $('#btnAdd').addEventListener('click', function () { openSheet(null); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    $('#mask').addEventListener('click', closeSheet);
+    $('#btnSave').addEventListener('click', submitForm);
+    $('#btnExport').addEventListener('click', exportJSON);
+    var bi = $('#btnImport'); if (bi) bi.addEventListener('click', function () { var f = $('#fileImport'); if (f) f.click(); });
+    var fi = $('#fileImport');
+    if (fi) fi.addEventListener('change', function () {
+      var f = fi.files && fi.files[0];
+      fi.value = '';                       // 清掉，否则同一个文件第二次选不触发 change
+      if (f) importFromFile(f);
+    });
+    $('#btnSeed').addEventListener('click', clearSeed);
+    $('#btnReset').addEventListener('click', resetFilters);
+    $('#btnDelete').addEventListener('click', function () { if (state.editId) delRow(state.editId); });
+
+    FORM_FIELDS.forEach(function (f) {
+      var n = document.querySelector(f.sel);
+      if (!n) return;
+      n.addEventListener('input', cacheDraft);
+      n.addEventListener('change', cacheDraft);
+    });
+
+    $('#kw').addEventListener('input', function () {
+      state.kw = this.value;
+      state.focusId = '';
+      refreshAll();
+      if (scrollTarget) flashRow(scrollTarget);
+    });
+
+    // 接单月下拉 → 跟着筛选（列表 / 统计 / 月度数字一起变）
+    $('#monthSel').addEventListener('change', function () {
+      state.month = this.value || '';
+      state.focusId = '';
+      UI_SAVED.month = state.month;
+      saveUIPrefs();
+      refreshAll();
+    });
+
+    // 年度表格行 → 只看那一年
+    $('#yearTable').addEventListener('click', function (e) {
+      var g = closest(e.target, 'data-ystat');
+      if (!g) return;
+      yearFocus(g.getAttribute('data-ystat'));
+    });
+
+    // 年度柱体 → 点柱子的年份脚注等于只看那一年（两排一起高亮）
+    $('#yearBars').addEventListener('click', function (e) {
+      var g = closest(e.target, 'data-ybar') || closest(e.target, 'data-ybarf');
+      if (!g) return;
+      yearFocus(g.getAttribute('data-ybar') || g.getAttribute('data-ybarf'));
+    });
+
+    // 月度表格行 → 只看那个月
+    $('#monthTable').addEventListener('click', function (e) {
+      var g = closest(e.target, 'data-mstat');
+      if (!g) return;
+      monthFocus(g.getAttribute('data-mstat'));
+    });
+
+    // 月度柱体 → 点净额排 / 扣款排的柱子、点月份脚注，都等于只看那个月（两排一起高亮）
+    $('#monthBars').addEventListener('click', function (e) {
+      // 脚注里的年份标签 → 只看那一年的月份（横轴就只剩那一段）
+      var y = closest(e.target, 'data-myear');
+      if (y) { yearFocus(y.getAttribute('data-myear')); return; }
+      var g = closest(e.target, 'data-mbar') || closest(e.target, 'data-mbarf');
+      if (!g) return;
+      monthFocus(g.getAttribute('data-mbar') || g.getAttribute('data-mbarf'));
+    });
+
+    // 接单年下拉 → 跟着筛选
+    $('#yearSel').addEventListener('change', function () {
+      state.year = this.value || '';
+      state.focusId = '';
+      UI_SAVED.year = state.year;
+      saveUIPrefs();
+      refreshAll();
+    });
+
+    // 阶段 tab → 切阶段（tab 数字与下面列表一一对应）
+    $('#stageTabs').addEventListener('click', function (e) {
+      var b = closest(e.target, 'data-stage');
+      if (!b) return;
+      gotoStage(b.getAttribute('data-stage'));
+      refreshAll();
+    });
+
+    // 图表柱子 → 跳阶段
+    $('#stageChart').addEventListener('click', function (e) {
+      var g = closest(e.target, 'data-stagebar');
+      if (!g) return;
+      gotoStage(g.getAttribute('data-stagebar'));
+    });
+
+    // 统计口径切换
+    $('#statScope').addEventListener('click', function (e) {
+      var b = closest(e.target, 'data-scope');
+      if (!b) return;
+      state.statScope = b.getAttribute('data-scope');
+      Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('on', x === b); });
+      renderStats();
+    });
+
+    // KPI 卡片快捷筛选
+    Array.prototype.forEach.call(document.querySelectorAll('.kpi'), function (k) {
+      k.addEventListener('click', function () {
+        var go = k.getAttribute('data-go');
+        if (go === 'reset') resetFilters();
+        else if (go === 'installed') { state.stage = state.stage === '已安装' ? '' : '已安装'; state.kw = ''; $('#kw').value = ''; state.focusId = ''; refreshAll(); }
+        else if (go === 'settled') { state.stage = state.stage === '已结清' ? '' : '已结清'; state.kw = ''; $('#kw').value = ''; state.focusId = ''; refreshAll(); }
+      });
+    });
+
+    // 今天要处理范围
+    $('#todayScope').style.cursor = 'pointer';
+    $('#todayScope').addEventListener('click', function () {
+      state.todayScope = state.todayScope === 'all' ? 'filtered' : 'all';
+      renderToday();
+    });
+
+    // 统一的行为委托
+    document.addEventListener('click', function (e) {
+      var jump = closest(e.target, 'data-focus');
+      if (jump) { focusRow(jump.getAttribute('data-focus')); flashRow(jump.getAttribute('data-focus')); return; }
+
+      var chip = closest(e.target, 'data-clear');
+      if (chip) {
+        var k = chip.getAttribute('data-clear');
+        if (k === 'stage') state.stage = '';
+        else if (k === 'kw') { state.kw = ''; $('#kw').value = ''; }
+        else if (k === 'year') { state.year = ''; if ($('#yearSel')) $('#yearSel').value = ''; }
+        else if (k === 'month') { state.month = ''; if ($('#monthSel')) $('#monthSel').value = ''; }
+        else if (k === 'sort') { state.sortKey = 'follow'; state.sortDir = 'asc'; $('#sortSel').value = 'follow_asc'; }
+        else if (k === 'owner') setOwner('');
+        state.focusId = '';
+        refreshAll();
+        return;
+      }
+
+      var b = closest(e.target, 'data-act');
+      if (!b) return;
+      var act = b.getAttribute('data-act'), id = b.getAttribute('data-id');
+      if (act === 'edit') openSheet(id);
+      else if (act === 'advance') advanceRow(id);
+      else if (act === 'back') backRow(id);
+      else if (act === 'refund') markRefund(id);
+      else if (act === 'del') delRow(id);
+      else if (act === 'donefollow') markFollowToday(id);
+      else if (act === 'detail') toggleDetail(id);
+      else if (act === 'locate') locateToday(id);
+      else if (act === 'gotostats') gotoStats();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeSheet(); closeConfirm(); }
+    });
+
+    if (typeof db.onUpdated === 'function') {
+      var pend = null;
+      db.onUpdated(function (payload) {
+        var ids = (payload && payload.databaseIds) || [];
+        if (ids.length && ids.indexOf(DATABASE_ID) === -1) return;
+        clearTimeout(pend);
+        pend = setTimeout(loadData, 400);
+      });
+    }
+  }
+  /** 排序 / 接单年这类界面偏好，防抖写回 localStorage */
+  var saveUITimer = null;
+  function saveUIPrefs() {
+    clearTimeout(saveUITimer);
+    saveUITimer = setTimeout(function () {
+      try { window.localStorage.setItem(UI_KEY, JSON.stringify(UI_SAVED)); } catch (e) {}
+    }, 300);
+  }
+  function syncScopeUI() {
+    Array.prototype.forEach.call(document.querySelectorAll('#statScope button'), function (x) {
+      x.classList.toggle('on', x.getAttribute('data-scope') === state.statScope);
+    });
+  }
+
+  /* ---------------- 启动 ---------------- */
+  /** 登录成功后才真正拉数据（未登录时一笔订单都不加载） */
+  function startApp() {
+    setSync(HAS_DB ? 'syncing' : 'local');
+    return db.getSchema({ databaseId: DATABASE_ID })
+      .then(function (schema) {
+        (schema && schema.properties || []).forEach(function (f) {
+          if ((f.type === 'select' || f.type === 'multi_select') && f.config && f.config.options) SCHEMA_OPTIONS[f.name] = f.config.options;
+        });
+        ensureStageOptions();
+        renderSelectOptions();
+      })
+      .catch(function (err) {
+        console.error('[order] schema 加载失败:', err);
+        SCHEMA_OPTIONS['阶段'] = STAGES.map(function (s) { return { id: s.name, text: s.name }; });
+        renderSelectOptions();
+      })
+      .then(loadData)
+      .then(function () {
+        bind($('#todayLabel')).textContent = '今天 ' + prettyDate(todayISO()) + ' · 共 ' + state.rows.length + ' 单';
+      });
+  }
+
+  function init() {
+    // 恢复上次的排序 / 月份偏好
+    try {
+      var raw = window.localStorage.getItem(UI_KEY);
+      if (raw) UI_SAVED = JSON.parse(raw) || {};
+    } catch (e) {}
+    // 只还原「排序」：排序不会挡住数据，记住更顺手。
+    // 「接单年 / 接单月」一律不还原 —— 上次选的月份会在刚打开时就把别的月挡掉，
+    // 顶部凭空多一行「生效条件」，看着像单子没了。所以每次开页面都从「全部年份 + 全部月份」开始。
+    if (UI_SAVED.sort) { state.sortKey = UI_SAVED.sort.split('_')[0]; state.sortDir = UI_SAVED.sort.split('_')[1]; $('#sortSel').value = UI_SAVED.sort; }
+    delete UI_SAVED.year;
+    delete UI_SAVED.month;
+    try { window.localStorage.setItem(UI_KEY, JSON.stringify(UI_SAVED)); } catch (e) {}
+
+    bindEvents();
+    bindDesignerEvents();
+    bindAuthEvents();
+    restoreTitle();
+    bind($('#todayLabel')).textContent = '今天 ' + prettyDate(todayISO()) + ' · 数据加载中…';
+    setSync(HAS_DB ? 'syncing' : 'local');
+    renderOfflineBar();   // 离线（本地文件 / 本地预览）时，登录页直接给出线上地址
+
+    // 先把云端设置（设计师名单 + 账号表）拉回来，再决定是进主界面还是挡在登录页
+    restoreSettings().then(function () {
+      var sess = lsGetSession();
+      var acc = sess && findAccount(sess.u);
+      if (!acc) {                     // 没登录 / 账号已被删除 → 一律挡在登录页
+        lsSetSession(null);
+        renderMe();
+        showAuthGate();
+        return;
+      }
+      applySession({ u: acc.u, name: acc.name, role: acc.role });
+      hideAuthGate();
+      startApp();
+    });
+
+    $('#sortSel').addEventListener('change', function () {
+      var v = this.value.split('_');
+      state.sortKey = v[0];
+      state.sortDir = v[1] === 'desc' ? 'desc' : 'asc';
+      UI_SAVED.sort = this.value;
+      saveUIPrefs();
+      state.focusId = '';
+      refreshAll();
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+})();
+</script>
+</body>
+</html>
