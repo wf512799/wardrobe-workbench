@@ -1792,8 +1792,14 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     }).then(function () { state.accFail = ''; return true; })
       .catch(function (err) {
         var s = String((err && err.message) || err || '');
-        // 平台写库要求浏览器登录了 WorkBuddy 账号，否则返回 401 not login
-        state.accFail = (/401|not login|未登录/i.test(s)) ? 'login' : 'other';
+        if (sdk) {
+          // 平台写库：浏览器没登录 WorkBuddy 账号会返回 401 not login
+          state.accFail = (/401|not login|未登录/i.test(s)) ? 'login' : 'other';
+        } else {
+          // 自托管云函数（GitHub Pages 等第三方托管）：401 / token 不对 都是页面令牌问题，
+          // 跟「有没有登录 WorkBuddy」无关，别再误导用户去 workbuddy.cn 登录
+          state.accFail = (/token|401|not login|未登录/i.test(s)) ? 'token' : 'other';
+        }
         console.error('[order] 设置云同步失败:', err);
         return false;
       });
@@ -1810,7 +1816,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   var SYNC_MSG = {
     ok:    '账号已同步到云端：换台电脑打开同一个链接，直接用这个账号登录就行。',
     failLogin: '云端拒绝了写入：这个浏览器没登录 WorkBuddy 账号。请在同一浏览器打开 workbuddy.cn 登录，再回来点「重新同步到云端」—— 在那之前账号只存在这台电脑。',
-    fail:  '账号没能同步到云端，现在只存在这台电脑的浏览器里 —— 换电脑或清缓存会登录不上。最常见的原因是这个浏览器没登录 WorkBuddy 账号：登录后到「账号」里点「重新同步到云端」。',
+    failToken: '云端拒绝了写入：这个页面的云端令牌（API_TOKEN）没有配置或不正确，自托管云函数（CloudBase）拒绝了写入。账号暂时只存在这台电脑 —— 请在 CloudBase 控制台给 wardrobe-api 云函数设置正确的 token，再到「账号」里点「重新同步到云端」。',
+    fail:  '账号没能同步到云端，现在只存在这台电脑的浏览器里 —— 换电脑或清缓存会登录不上。多半是网络问题或云端暂时连不上：稍后到「账号」里点「重新同步到云端」再试一次。',
     local: '现在是离线模式，账号只存在这台电脑里 —— 换电脑登录不上。请用线上链接打开。',
     empty: '还没有人注册：第一个注册的账号会自动成为老板，并同步到云端。'
   };
@@ -1829,7 +1836,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   function setAccSync(kind, msg) {
     state.accSync = kind;
     // 没同步成功时，分清「浏览器没登录平台」和「网络/其他原因」，别让用户瞎查网络
-    var text = msg || (kind === 'fail' && state.accFail === 'login' ? SYNC_MSG.failLogin : SYNC_MSG[kind]) || '';
+    var text = msg || (kind === 'fail'
+      ? (state.accFail === 'login' ? SYNC_MSG.failLogin
+         : state.accFail === 'token' ? SYNC_MSG.failToken
+         : SYNC_MSG.fail)
+      : SYNC_MSG[kind]) || '';
     if (kind === 'local') text = text + offlineWhy();
     var cls = kind === 'ok' ? 'ok' : (kind === 'local' ? 'local' : 'warn');
     ['#accSyncTip', '#acSyncTip'].forEach(function (sel) {
@@ -2115,6 +2126,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     if (state.accSync === 'fail') {
       toast(state.accFail === 'login'
         ? '注意：这个浏览器没登录 WorkBuddy 账号，云端写入被拒绝，换电脑会登录不上'
+        : state.accFail === 'token'
+        ? '注意：页面的云端令牌（API_TOKEN）未配置或不正确，云端写入被拒绝，换电脑会登录不上'
         : '注意：账号没同步到云端，换电脑会登录不上');
     }
   }
@@ -2146,6 +2159,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         toast('注册成功（离线模式，账号只在这台电脑）');
       } else if (state.accFail === 'login') {
         toast('注册成功，但这个浏览器没登录 WorkBuddy，账号暂时只在这台电脑 —— 登录后再到「账号」里点「重新同步到云端」');
+      } else if (state.accFail === 'token') {
+        toast('注册成功，但页面的云端令牌（API_TOKEN）未配置或不正确，账号暂时只在这台电脑 —— 到 CloudBase 控制台核对令牌后再点「重新同步到云端」');
       } else {
         toast('注册成功，但账号没同步到云端 —— 换电脑会登录不上');
       }
@@ -2299,7 +2314,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       saveAccounts(getAccounts()).then(function (ok) {
         rs.disabled = false;
         toast(ok ? '已同步到云端：换电脑也能登录了'
-                 : (state.accFail === 'login' ? '还是没登录 WorkBuddy 账号，请先在 workbuddy.cn 登录再试' : '同步失败，请检查网络后重试'));
+                 : (state.accFail === 'login' ? '还是没登录 WorkBuddy 账号，请先在 workbuddy.cn 登录再试'
+                    : state.accFail === 'token' ? '云端令牌（API_TOKEN）未配置或不正确，请到 CloudBase 控制台核对 wardrobe-api 的 token 后再点'
+                    : '同步失败，请检查网络后重试'));
       });
     });
   }
