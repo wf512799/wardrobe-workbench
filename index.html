@@ -1222,7 +1222,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   // 所以读写统一走一个自托管的 HTTP 云函数（背后是 CloudBase PostgreSQL）。
   // 留空 = 不启用，退回 localStorage 单机模式。
   var API_BASE = 'https://hms-d0g8ch3tk2a7caf08-1303254235.ap-shanghai.app.tcloudbase.com/wardrobe-api';
-  var API_TOKEN = '';
+  var API_TOKEN = '956c9b454094f77d7ef8743b103d7858';
 
   var sdk = (window.__SMART_PAGE__ && window.__SMART_PAGE__.database) ? window.__SMART_PAGE__.database : null;
   var HAS_DB = !!sdk || !!API_BASE;
@@ -1519,6 +1519,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     }
     function call(payload) {
       if (API_TOKEN) payload.token = API_TOKEN;
+      if (state.cloudToken) payload.session = state.cloudToken;
       return fetch(API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2048,6 +2049,88 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     try { if (s) window.localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else window.localStorage.removeItem(SESSION_KEY); } catch (e) {}
   }
 
+  /* ---- 云端登录会话（GitHub Pages 自托管云函数需要） ----
+     云函数要三样：token(API密钥) + t(数据库ID) + session(登录JWT)。
+     页面原来只发了前两样，从不去云端取会话，所以写入一直被「登录状态失效」拒绝。
+     现在登录/注册时额外向云函数 op=login / op=register 换取 session，存本机后随每次请求带上。 */
+  var CLOUD_SESSION_KEY = 'wb_wardrobe_cloud_session_v1';
+  function lsGetCloud() {
+    try { var r = window.localStorage.getItem(CLOUD_SESSION_KEY); return r || ''; } catch (e) { return ''; }
+  }
+  function lsSetCloud(tok) {
+    try { if (tok) window.localStorage.setItem(CLOUD_SESSION_KEY, tok); else window.localStorage.removeItem(CLOUD_SESSION_KEY); } catch (e) {}
+  }
+  function decodeJwt(tok) {
+    try {
+      var parts = String(tok).split('.');
+      if (parts.length < 2) return null;
+      var b = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var bin = window.atob(b);
+      var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+      return JSON.parse(new TextDecoder('utf-8').decode(bytes)) || {};
+    } catch (e) { return null; }
+  }
+  function setCloudToken(tok) { state.cloudToken = tok || ''; lsSetCloud(tok); }
+  // 向云函数换取登录会话；返回 Promise<session 字符串>
+  function cloudLogin(u, pwd) {
+    return fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t: DATABASE_ID, op: 'login', u: u, pwd: pwd, token: API_TOKEN })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (!j || j.ok === false) throw new Error((j && j.error) || '云端登录失败');
+      if (!j.session) throw new Error('云端没有返回会话');
+      return j.session;
+    });
+  }
+  function cloudRegister(u, name, pwd) {
+    return fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t: DATABASE_ID, op: 'register', u: u, name: name, pwd: pwd, pwd2: pwd, token: API_TOKEN })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (!j || j.ok === false) throw new Error((j && j.error) || '云端注册失败');
+      if (!j.session) throw new Error('云端没有返回会话');
+      return j.session;
+    });
+  }
+  // 拿到云端会话后：确保本机有账号目录项（换设备首登时本机还没有），再完成登录
+  function afterCloudAuth(u, tok) {
+    setCloudToken(tok);
+    var claims = decodeJwt(tok) || {};
+    var acc = findAccount(u);
+    if (!acc) {
+      return restoreSettings().then(function () {
+        acc = findAccount(u);
+        if (!acc) {
+          var role = getAccounts().length ? 'designer' : 'boss';
+          acc = { u: claims.u || u, name: claims.name || u, salt: '', h: '', role: role, at: todayISO() };
+          saveAccounts(getAccounts().concat([acc]));
+        }
+        return finishLogin(acc, tok);
+      }).catch(function () { return finishLogin({ u: u, name: claims.name || u, role: 'designer' }, tok); });
+    }
+    return finishLogin(acc, tok);
+  }
+  function finishLogin(acc, tok) {
+    setCloudToken(tok);
+    var sess = { u: acc.u, name: acc.name, role: acc.role, at: todayISO() };
+    lsSetSession(sess);
+    hideAuthGate();
+    applySession(sess);
+    startApp();
+    // 登录后把账号目录再同步一次，保证多端一致
+    saveAccounts(getAccounts());
+    toast('登录成功，账号已与云端连通');
+  }
+
   function getAccounts() { return state.accounts || []; }
   function getDesigners() { return state.designers || []; }
   function findAccount(u) {
@@ -2115,6 +2198,17 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var u = normUser($('#auUser') && $('#auUser').value);
     var p = $('#auPwd') ? $('#auPwd').value : '';
     if (!u) { authErr('请填用户名'); return; }
+    if (!p) { authErr('请填密码'); return; }
+    // 云端模式：以云函数账号为准（换设备也能登）
+    if (HAS_DB) {
+      cloudLogin(u, p).then(function (tok) { return afterCloudAuth(u, tok); })
+        .catch(function (err) {
+          var s = String((err && err.message) || err || '');
+          authErr(/用户名|密码|不存在|错误|失效|未注册|不对/i.test(s) ? '用户名或密码不对' : ('云端登录失败：' + s));
+        });
+      return;
+    }
+    // 本地模式（无云端）：沿用原逻辑
     var acc = findAccount(u);
     if (!acc) { authErr('这个用户名还没注册'); return; }
     if (pwdHash(p, acc.salt) !== acc.h) { authErr('密码不对，再试一次'); return; }
@@ -2144,11 +2238,28 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     if (findAccount(u)) { authErr('这个用户名已经被占用了'); return; }
     // 第一个注册的账号自动成为老板，之后的都是设计师
     var role = getAccounts().length ? 'designer' : 'boss';
+    // 云端模式：先在云函数建好账号拿到会话，再落本机目录
+    if (HAS_DB) {
+      cloudRegister(u, name, p).then(function (tok) {
+        setCloudToken(tok);
+        var salt = makeSalt();
+        var acc = { u: u, name: name, salt: salt, h: pwdHash(p, salt), role: role, at: todayISO() };
+        saveAccounts(getAccounts().concat([acc])).then(function () {
+          finishLogin(acc, tok);
+          toast(role === 'boss' ? '注册成功：第一个账号自动成为老板，已同步到云端' : '注册成功，账号已同步到云端');
+        });
+      }).catch(function (err) {
+        var s = String((err && err.message) || err || '');
+        authErr(/用户名|密码|至少|不一致|占用|被占|姓名/i.test(s) ? s : ('云端注册失败：' + s));
+      });
+      return;
+    }
+    // 本地模式（无云端）：沿用原逻辑
     var salt = makeSalt();
-    var acc = { u: u, name: name, salt: salt, h: pwdHash(p, salt), role: role, at: todayISO() };
+    var acc2 = { u: u, name: name, salt: salt, h: pwdHash(p, salt), role: role, at: todayISO() };
     // 等云端结果回来再进主界面：同步成没成功必须让用户知道，否则换电脑才发现登不上
-    saveAccounts(getAccounts().concat([acc])).then(function (ok) {
-      var sess = { u: acc.u, name: acc.name, role: acc.role, at: todayISO() };
+    saveAccounts(getAccounts().concat([acc2])).then(function (ok) {
+      var sess = { u: acc2.u, name: acc2.name, role: acc2.role, at: todayISO() };
       lsSetSession(sess);
       hideAuthGate();
       applySession(sess);
@@ -2196,6 +2307,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   function doLogout() {
     askConfirm('退出后要重新登录才能看订单，确定吗？', '退出', function () {
       lsSetSession(null);
+      lsSetCloud('');
+      state.cloudToken = '';
       lsSetOwner('');
       state.me = null;
       state.owner = '';
@@ -4066,6 +4179,22 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
 
     // 先把云端设置（设计师名单 + 账号表）拉回来，再决定是进主界面还是挡在登录页
     restoreSettings().then(function () {
+      // 云端模式：本地存着没过期的云端会话 → 直接带会话进主界面（换设备/刷新不用重登）
+      if (HAS_DB) {
+        var ctok = lsGetCloud();
+        if (ctok) {
+          var claims = decodeJwt(ctok);
+          if (claims && (!claims.exp || claims.exp > Date.now())) {
+            setCloudToken(ctok);
+            var cAcc = findAccount(claims.u) || { u: claims.u, name: claims.name || claims.u, role: claims.role === 'boss' ? 'boss' : 'designer' };
+            applySession({ u: cAcc.u, name: cAcc.name, role: cAcc.role });
+            hideAuthGate();
+            startApp();
+            return;
+          }
+          lsSetCloud('');
+        }
+      }
       var sess = lsGetSession();
       var acc = sess && findAccount(sess.u);
       if (!acc) {                     // 没登录 / 账号已被删除 → 一律挡在登录页
