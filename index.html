@@ -1226,6 +1226,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
 
   var sdk = (window.__SMART_PAGE__ && window.__SMART_PAGE__.database) ? window.__SMART_PAGE__.database : null;
   var HAS_DB = !!sdk || !!API_BASE;
+  // 是否走「自托管云函数」（GitHub Pages 这类没有 CloudBase Web SDK 的托管）。
+  // 平台内置 SDK 存在时优先走 SDK，只有没 SDK、但配了 API_BASE 才走云函数。
+  var USE_CLOUD_FN = !sdk && !!API_BASE;
 
   /* ---------------- 唯一数据源 ---------------- */
   var state = {
@@ -1797,9 +1800,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
           // 平台写库：浏览器没登录 WorkBuddy 账号会返回 401 not login
           state.accFail = (/401|not login|未登录/i.test(s)) ? 'login' : 'other';
         } else {
-          // 自托管云函数（GitHub Pages 等第三方托管）：401 / token 不对 都是页面令牌问题，
-          // 跟「有没有登录 WorkBuddy」无关，别再误导用户去 workbuddy.cn 登录
+          // 自托管云函数（GitHub Pages 等第三方托管）：401 / token 不对
           state.accFail = (/token|401|not login|未登录/i.test(s)) ? 'token' : 'other';
+          // 还没走云端登录（没有会话）时，写云端账号表必然被云函数按「未登录」拒绝 ——
+          // 这是登录前的正常状态，不是错误。静默跳过，别在登录页上吓人。
+          if (!state.cloudToken) { state.accFail = ''; return false; }
         }
         console.error('[order] 设置云同步失败:', err);
         return false;
@@ -1943,8 +1948,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         // 云端设置表还是空的
         var localAcc = getAccounts();
         if (!localAcc.length) { setAccSync('empty'); return; }
-        // 本地有账号、云端却没有：上次多半没同步成功（最常见是浏览器没登录平台），
-        // 这次开页面自动再推一次 —— 用户一旦登录了 WorkBuddy，刷新一下就自动补上
+        // 本地有账号、云端却没有：上次多半没同步成功，这次开页面自动再推一次。
         return saveAccounts(localAcc);
       }
       var cloud = parseDesignerList(rec['设计师名单']);
@@ -1958,6 +1962,10 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       else setAccSync(getAccounts().length ? 'fail' : 'empty');
     }).catch(function (err) {
       console.error('[order] 设置读取失败:', err);
+      // 自托管云函数路径下，还没登录就必然读到 401 —— 登录前的正常状态，静默跳过。
+      // 平台 SDK 路径（sdk 存在）保持原样，让「没登录 WorkBuddy」照常提示。
+      if (!sdk && !state.cloudToken) { setAccSync(''); return; }
+      if (!sdk) state.accFail = (/401|not login|未登录/i.test(String((err && err.message) || err || ''))) ? 'login' : 'other';
       setAccSync(getAccounts().length ? 'fail' : '');
     });
   }
@@ -2199,8 +2207,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var p = $('#auPwd') ? $('#auPwd').value : '';
     if (!u) { authErr('请填用户名'); return; }
     if (!p) { authErr('请填密码'); return; }
-    // 云端模式：以云函数账号为准（换设备也能登）
-    if (HAS_DB) {
+    // 云端模式（自托管云函数）：以云函数账号为准（换设备也能登）
+    if (USE_CLOUD_FN) {
       cloudLogin(u, p).then(function (tok) { return afterCloudAuth(u, tok); })
         .catch(function (err) {
           var s = String((err && err.message) || err || '');
@@ -2238,8 +2246,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     if (findAccount(u)) { authErr('这个用户名已经被占用了'); return; }
     // 第一个注册的账号自动成为老板，之后的都是设计师
     var role = getAccounts().length ? 'designer' : 'boss';
-    // 云端模式：先在云函数建好账号拿到会话，再落本机目录
-    if (HAS_DB) {
+    // 云端模式（自托管云函数）：先在云函数建好账号拿到会话，再落本机目录
+    if (USE_CLOUD_FN) {
       cloudRegister(u, name, p).then(function (tok) {
         setCloudToken(tok);
         var salt = makeSalt();
