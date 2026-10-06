@@ -1943,6 +1943,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     renderOwnerBar();
     renderAccounts();
     if (!HAS_DB || !SET_DB_ID) { setAccSync('local'); return Promise.resolve(); }
+    // 自托管云函数路径下，没登录（没有会话）时读云端必被 401 拒绝 ——
+    // 这不是「云端是空的」，也不该拿本地账号去推。登录前一律只用本地数据、不碰云端、不报错。
+    if (USE_CLOUD_FN && !state.cloudToken) { setAccSync(getAccounts().length ? '' : 'empty'); return Promise.resolve(); }
     return Promise.resolve(cloudTitleRec()).then(function (rec) {
       if (!rec) {
         // 云端设置表还是空的
@@ -2109,23 +2112,34 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       return j.session;
     });
   }
-  // 拿到云端会话后：确保本机有账号目录项（换设备首登时本机还没有），再完成登录
+  // 拿到云端会话后：以【云端账号表】为准刷新本机，再完成登录。
+  // 关键：绝不能拿本机（可能是旧的、别的设备的）账号表覆盖云端 —— 那会把云端正确
+  // 的密码哈希抹掉，导致「第一次能登、退出后再也登不上」。这里只读云端、只写本机。
   function afterCloudAuth(u, tok) {
     setCloudToken(tok);
     var claims = decodeJwt(tok) || {};
-    var acc = findAccount(u);
-    if (!acc) {
-      return restoreSettings().then(function () {
-        acc = findAccount(u);
-        if (!acc) {
-          var role = getAccounts().length ? 'designer' : 'boss';
-          acc = { u: claims.u || u, name: claims.name || u, salt: '', h: '', role: role, at: todayISO() };
-          saveAccounts(getAccounts().concat([acc]));
-        }
-        return finishLogin(acc, tok);
-      }).catch(function () { return finishLogin({ u: u, name: claims.name || u, role: 'designer' }, tok); });
-    }
-    return finishLogin(acc, tok);
+    // 先把云端账号表拉回来覆盖本机（失败就沿用本机，不影响登录）
+    return restoreSettings().then(function () {
+      var acc = findAccount(u);
+      if (!acc) {
+        // 云端也没有这个账号目录项（换设备首登、或云端账号表缺失）：
+        // 身份以云端会话里的 claims 为准，补一条占位目录项，密码哈希留空。
+        // 注意：只改本机 state/localStorage，绝不把这份目录表推回云端。
+        acc = { u: claims.u || u, name: claims.name || u, salt: '', h: '', role: claims.role === 'boss' ? 'boss' : 'designer', at: todayISO() };
+        var local = getAccounts().filter(function (x) { return normUser(x.u) !== normUser(acc.u); });
+        state.accounts = local.concat([acc]);
+        lsSetAccounts(state.accounts);
+        renderAccounts();
+      } else if (claims.role && acc.role !== claims.role) {
+        // 云端会话里的角色是权威，纠正本机显示
+        acc.role = claims.role === 'boss' ? 'boss' : 'designer';
+        lsSetAccounts(getAccounts());
+        renderAccounts();
+      }
+      return finishLogin(acc, tok);
+    }).catch(function () {
+      return finishLogin({ u: u, name: claims.name || u, role: claims.role === 'boss' ? 'boss' : 'designer' }, tok);
+    });
   }
   function finishLogin(acc, tok) {
     setCloudToken(tok);
@@ -2134,8 +2148,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     hideAuthGate();
     applySession(sess);
     startApp();
-    // 登录后把账号目录再同步一次，保证多端一致
-    saveAccounts(getAccounts());
+    // 关键：这里【绝不】回推账号表。本机可能是旧数据/别的设备，回推会把云端正确
+    // 的密码哈希覆盖掉 —— 那正是「第一次能登、退出后再也登不上」的元凶。
     toast('登录成功，账号已与云端连通');
   }
 
@@ -2246,14 +2260,13 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     if (findAccount(u)) { authErr('这个用户名已经被占用了'); return; }
     // 第一个注册的账号自动成为老板，之后的都是设计师
     var role = getAccounts().length ? 'designer' : 'boss';
-    // 云端模式（自托管云函数）：先在云函数建好账号拿到会话，再落本机目录
+    // 云端模式（自托管云函数）：先在云函数建好账号拿到会话，再以云端账号表为准落本机
     if (USE_CLOUD_FN) {
       cloudRegister(u, name, p).then(function (tok) {
-        setCloudToken(tok);
-        var salt = makeSalt();
-        var acc = { u: u, name: name, salt: salt, h: pwdHash(p, salt), role: role, at: todayISO() };
-        saveAccounts(getAccounts().concat([acc])).then(function () {
-          finishLogin(acc, tok);
+        // 注意：密码哈希由云函数在服务端生成并写入云端设置表，页面【不要】再自己造一份
+        // 本机哈希推回去 —— 两边的 salt 不一样，回推会把云端正确的哈希覆盖掉，
+        // 造成「注册后第一次能登、之后登不上」。直接用 afterCloudAuth 拉云端账号表。
+        return afterCloudAuth(u, tok).then(function () {
           toast(role === 'boss' ? '注册成功：第一个账号自动成为老板，已同步到云端' : '注册成功，账号已同步到云端');
         });
       }).catch(function (err) {
