@@ -998,6 +998,125 @@ footer,
 /* 顶栏内部也收一个上限，避免 1640 宽屏下「标题贴最左、按钮贴最右」拉得太开。
    顶栏是 flex 居中 + 全宽背景条，这里只约束内容区宽度，背景仍铺满整屏。 */
 .top{padding-left:max(16px,calc((100% - 1024px)/2 + 16px));padding-right:max(16px,calc((100% - 1024px)/2 + 16px))}
+
+/* ---------- 第十九轮：阶段筛选从横向标签条 → 订单卡片内左侧栏 ---------- */
+/* 用户要求「这些按钮放在侧边栏」。原来 12 个阶段胶囊横铺两行、占一大条高度；
+   现在把「订单跟进」卡片改成两列 grid：左列窄栏竖排 12 个阶段，右列放工具行 + 订单列表。
+   ⚠️ 只改 CSS（节点顺序是 .card-h → #chips → .tools → #stageTabs → #orderList → #orderEmpty）：
+     用 :has() 精准命中「含阶段栏的那张卡片」，再靠 grid-column 把各节点分配到两列，
+     DOM 结构与类名一律不动（冒烟测试对 #stageTabs .tab=12 / [class*=tab-pre]=1 有硬断言）。 */
+.card:has(> #stageTabs){
+  display:grid;
+  /* 左列 176px 固定窄栏；右列 minmax(0,1fr) 让它能正常收缩不撑破卡片 */
+  grid-template-columns:176px minmax(0,1fr);
+  /* 第 1 行放卡头（整行铺满，标题不被左栏切掉）；后 3 行放 chips / tools / 列表 */
+  grid-template-rows:auto auto auto 1fr;
+  column-gap:18px;
+  row-gap:0;
+  align-content:start;
+  align-items:start;
+}
+/* 卡头「订单跟进 + 计数徽标」占满两列的第一行（阶段栏从第 2 行才开始竖排，
+   否则 grid-row:1/-1 会让阶段栏顶到卡片最上沿、把标题挤掉） */
+.card:has(> #stageTabs) > .card-h{
+  grid-column:1 / -1; grid-row:1;
+  margin-bottom:12px;
+}
+/* 左列：阶段栏从第 2 行起跨到最后一列，做成可滚动的竖排条 */
+.card:has(> #stageTabs) > #stageTabs{
+  grid-column:1; grid-row:2 / -1;
+  display:flex; flex-direction:column; align-items:stretch; gap:2px;
+  overflow:visible;                    /* 竖排不需要横向滚动 */
+  padding:0 14px 0 0;
+  margin:0;
+  border-bottom:none;
+  border-right:1px solid rgba(60,42,26,.12);
+  align-self:start;
+  position:sticky; top:calc(var(--top-h,56px) + 8px);   /* 长列表滚动时阶段栏跟着钉住 */
+  max-height:calc(100vh - var(--top-h,56px) - 28px);
+  overflow-y:auto;
+  scrollbar-width:thin;
+}
+/* 右列的 4 个区块：统一放第 2 列（从第 2 行起，与阶段栏同排） */
+.card:has(> #stageTabs) > #chips{grid-column:2; grid-row:2}
+.card:has(> #stageTabs) > .tools{grid-column:2; grid-row:3}
+.card:has(> #stageTabs) > #orderList,
+.card:has(> #stageTabs) > #orderEmpty{grid-column:2; grid-row:4}
+.card:has(> #stageTabs) > #orderEmpty{align-self:start}
+
+/* 竖排后每个阶段变成「左对齐的一行」，仍是胶囊外观（沿用第十四轮配色），
+   只是不再有下划线 tab 语义 —— 选中靠左色条 + 淡底。 */
+.card:has(> #stageTabs) .tab{
+  justify-content:flex-start;
+  width:100%;
+  border:none;
+  border-left:3px solid transparent;
+  border-radius:0 8px 8px 0;
+  padding:0 10px 0 9px;
+  background:transparent;
+  color:var(--ink-2);
+  font-weight:600;
+}
+.card:has(> #stageTabs) .tab:hover{
+  background:#F7F2EA;border-bottom-color:transparent;border-left-color:rgba(180,118,58,.28);
+  transform:none;box-shadow:none;
+}
+.card:has(> #stageTabs) .tab.on,
+.card:has(> #stageTabs) .tab.on:hover{
+  background:#FBF3E7;border-left-color:var(--pri);border-bottom-color:transparent;
+  color:var(--pri-d);font-weight:700;
+}
+/* 竖排里 pip 图标徽章保留（沿用第十四轮的彩色小图标），但缩小一号更贴竖排行高 */
+.card:has(> #stageTabs) .tab .pip{width:18px;height:18px;border-radius:6px}
+.card:has(> #stageTabs) .tab .pip svg{width:11px;height:11px}
+/* 数字计数徽标推到最右，形成「名称 …… 计数」的对齐感 */
+.card:has(> #stageTabs) .tab .n{margin-left:auto}
+/* 「未下单」那条合并按钮原来是靠 margin-left 与前面拉开，竖排改成顶部留白 + 细分隔线 */
+.card:has(> #stageTabs) .tab-pre{
+  margin-left:0;margin-top:6px;
+  border-left:3px solid transparent;border-top:1px solid rgba(60,42,26,.10);
+  border-radius:0 8px 8px 0;
+}
+.card:has(> #stageTabs) .tab-pre.on{border-left-color:var(--pri)}
+
+/* 窄屏（≤1023px）：还原成现在的横向标签条（可横滑），手机端体验不变 */
+@media (max-width:1023px){
+  .card:has(> #stageTabs){
+    display:block;
+  }
+  .card:has(> #stageTabs) > .card-h{
+    grid-column:auto;grid-row:auto;
+  }
+  .card:has(> #stageTabs) > #stageTabs{
+    grid-column:auto;grid-row:auto;
+    flex-direction:row;flex-wrap:nowrap;align-items:flex-end;gap:2px;
+    overflow-x:auto;overflow-y:visible;
+    padding:0 0 2px;margin:0 0 12px;
+    border-right:none;border-bottom:1px solid rgba(60,42,26,.12);
+    position:static;max-height:none;align-self:auto;
+  }
+  .card:has(> #stageTabs) > #chips,
+  .card:has(> #stageTabs) > .tools,
+  .card:has(> #stageTabs) > #orderList,
+  .card:has(> #stageTabs) > #orderEmpty{grid-column:auto;grid-row:auto}
+  .card:has(> #stageTabs) .tab{
+    width:auto;flex:none;justify-content:center;
+    border-left:none;border-bottom:2px solid transparent;border-radius:8px 8px 0 0;
+    padding:0 12px;
+  }
+  .card:has(> #stageTabs) .tab .pip{width:20px;height:20px;border-radius:7px}
+  .card:has(> #stageTabs) .tab .pip svg{width:12px;height:12px}
+  .card:has(> #stageTabs) .tab:hover{
+    border-left-color:transparent;border-bottom-color:rgba(180,118,58,.28);
+  }
+  .card:has(> #stageTabs) .tab.on,
+  .card:has(> #stageTabs) .tab.on:hover{
+    background:transparent;border-left-color:transparent;border-bottom-color:var(--pri);
+    color:var(--pri-d);
+  }
+  .card:has(> #stageTabs) .tab .n{margin-left:1px}
+  .card:has(> #stageTabs) .tab-pre{margin-left:8px;margin-top:0}
+}
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
