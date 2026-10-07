@@ -1857,11 +1857,16 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      }).then(function (j) {
-        if (!j || j.ok === false) throw new Error((j && j.error) || '云端接口返回失败');
-        return j;
+        // 先解析响应体，再看 HTTP 状态。
+        // 云函数把业务错误也当真实 HTTP 401/403 返回（例如「登录状态失效了，请重新登录」），
+        // 如果先判 r.ok，就会把服务端给的中文原因丢掉、只剩「HTTP 401」，
+        // 导致上游的 isSessionExpired() 认不出这是「登录过期」，错误地甩出笼统的失败提示。
+        return r.json().catch(function () { return null; }).then(function (j) {
+          if (j && j.ok === false) throw new Error(j.error || '云端拒绝了这次请求');
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (!j) throw new Error('云端返回了无法解析的内容');
+          return j;
+        });
       });
     }
     return {
@@ -1920,7 +1925,13 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         if (r && r.hasMore && next && next !== cursor && page.length) return readRecords(next, acc, guard + 1);
         return acc;
       })
-      .catch(function (err) { console.error('[order] 分页读取中断:', err); return acc; });
+      .catch(function (err) {
+        console.error('[order] 分页读取中断:', err);
+        // 会话失效不能当成「读到 0 条」—— 那样页面会安静地显示一个空列表，
+        // 用户以为订单丢了。必须往上抛，由 loadData() 引导重新登录。
+        if (isSessionExpired(err)) throw err;
+        return acc;   // 其它（网络抖动等）沿用老行为：返回已读到的部分
+      });
   }
   function loadData() {
     setSync('syncing');
@@ -1933,6 +1944,14 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       })
       .catch(function (err) {
         console.error('[order] 数据加载失败:', err);
+        // 本地会话看着没过期、但云端已经不认了（密钥换过 / 会话被吊销）：
+        // 这时页面会「离线 + 一条订单都没有」，很容易被误当成「数据丢了」。
+        // 直接引导重新登录，比让人对着空白页发慌好。
+        if (USE_CLOUD_FN && isSessionExpired(err)) {
+          setSync('offline');
+          needRelogin('重新加载订单', function () { loadData(); });
+          return;
+        }
         setSync('offline');
         toast('数据加载失败，请刷新重试');
       });
@@ -2511,7 +2530,12 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       .then(function (j) {
         if (j && j.session) setCloudToken(j.session);
       })
-      .catch(function () { /* 续期失败无所谓，正常用；真过期了会提示重登 */ });
+      .catch(function (err) {
+        // 这里保持「静默」：续期失败不弹任何东西。
+        // 会话真失效的话，紧接着的 loadData() 读订单也会失败，
+        // 由那里的 isSessionExpired 统一引导重登 —— 一处兜底，避免两处各弹一次。
+        console.warn('[order] 会话续期失败（不阻塞使用）:', err);
+      });
   }
   // 向云函数换取登录会话；返回 Promise<session 字符串>
   function cloudLogin(u, pwd) {
@@ -5132,6 +5156,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         startApp();
         // 顺手把会话续到新有效期（静默，失败不影响使用）——
         // 常用的人每次打开自动续，就不会在录单录到一半时撞上「登录过期」。
+        // 注意：续期失败时如果放着不管，后面的读/写会一个个报错（还都是「HTTP 401」），
+        // 所以续期这条链自己也负责把「该重登了」这件事说出来。
         silentRenewSession();
         return;
       }
