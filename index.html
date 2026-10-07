@@ -722,6 +722,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
 .sync-tip.ok{background:#EAF3DE;color:#3B6D11;border-color:#C0DD97}
 .sync-tip.warn{background:#FCEBEB;color:#A32D2D;border-color:#F7C1C1}
 .sync-tip.local{background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7}
+.sync-tip.info{background:#EEF4FB;color:#2F5C86;border-color:#CFE0F2}
 .offline-bar{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#FDF3E3;border:1px solid #EBD3A8;color:#7A5320;font-size:12.5px;line-height:1.65;text-align:left}
 .offline-bar b{display:block;font-size:13px;color:#8A4B0F;margin-bottom:2px}
 .ob-url{display:block;margin:6px 0 8px;padding:6px 8px;border-radius:7px;background:#FFFBEF;border:1px dashed #D9BB84;font-size:12px;word-break:break-all;user-select:all;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -1840,6 +1841,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     return '';
   }
   function setAccSync(kind, msg) {
+    // 登录门还没跨过去（云端函数路径下还没有会话）时，一律不显示「同步失败」警告：
+    // 登录前本来就没连上云端，这不是错误。真正的同步状态等登录后在「账号」面板里看。
+    if (kind === 'fail' && USE_CLOUD_FN && !state.cloudToken) kind = '';
     state.accSync = kind;
     // 没同步成功时，分清「浏览器没登录平台」和「网络/其他原因」，别让用户瞎查网络
     var text = msg || (kind === 'fail'
@@ -1848,7 +1852,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
          : SYNC_MSG.fail)
       : SYNC_MSG[kind]) || '';
     if (kind === 'local') text = text + offlineWhy();
-    var cls = kind === 'ok' ? 'ok' : (kind === 'local' ? 'local' : 'warn');
+    // 「还没有人注册」是正常引导，不是错误 —— 用中性蓝，别用红色吓人
+    var cls = kind === 'ok' ? 'ok' : (kind === 'local' ? 'local' : (kind === 'empty' ? 'info' : 'warn'));
     ['#accSyncTip', '#acSyncTip'].forEach(function (sel) {
       var n = $(sel);
       if (!n) return;
@@ -2037,11 +2042,13 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     return h.toString(36);
   }
   /**
-   * 「忘记密码」用的管理员重置码。
+   * 「忘记密码」用的管理员重置码（仅本地方案 / 无云端时使用）。
    * 密码只存加盐哈希，谁都看不到原密码，所以找回不了、只能重设一个 ——
-   * 拿到这个码就能给任意账号重设密码。想换一个码，改这一行即可。
+   * 拿到这个码就能给任意账号重设密码。
+   * 注意：接了自托管云函数时，重设走云端的 op=resetPwd，口令以【云端】的 RESET_CODE 为准
+   * （本页的码只是离线兜底）。两处的码保持同一个值，免得用户记混。
    */
-  var RESET_CODE = '666666';
+  var RESET_CODE = '190843';
   function makeSalt() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 
   function lsGetAccounts() {
@@ -2083,34 +2090,45 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     } catch (e) { return null; }
   }
   function setCloudToken(tok) { state.cloudToken = tok || ''; lsSetCloud(tok); }
-  // 向云函数换取登录会话；返回 Promise<session 字符串>
-  function cloudLogin(u, pwd) {
+  /* 统一的云函数调用。
+     云函数把业务错误（密码不对、重置码不对…）也当成真正的 HTTP 401/400 返回，
+     以前的代码遇到非 2xx 直接抛「HTTP 401」，用户看到的是一句不知所云的英文状态码，
+     根本不知道其实是「密码不对」。这里先解析响应体，优先抛出服务端给的中文原因。 */
+  function apiPost(body) {
+    var payload = { token: API_TOKEN };
+    for (var k in body) if (Object.prototype.hasOwnProperty.call(body, k)) payload[k] = body[k];
     return fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ t: DATABASE_ID, op: 'login', u: u, pwd: pwd, token: API_TOKEN })
+      body: JSON.stringify(payload)
     }).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function (j) {
-      if (!j || j.ok === false) throw new Error((j && j.error) || '云端登录失败');
+      return r.json().catch(function () { return null; }).then(function (j) {
+        if (j && j.ok === false) throw new Error(j.error || '云端拒绝了这次请求');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        if (!j) throw new Error('云端返回了无法解析的内容');
+        return j;
+      });
+    });
+  }
+  // 向云函数换取登录会话；返回 Promise<session 字符串>
+  function cloudLogin(u, pwd) {
+    return apiPost({ t: DATABASE_ID, op: 'login', u: u, pwd: pwd }).then(function (j) {
       if (!j.session) throw new Error('云端没有返回会话');
       return j.session;
     });
   }
   function cloudRegister(u, name, pwd) {
-    return fetch(API_BASE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ t: DATABASE_ID, op: 'register', u: u, name: name, pwd: pwd, pwd2: pwd, token: API_TOKEN })
-    }).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function (j) {
-      if (!j || j.ok === false) throw new Error((j && j.error) || '云端注册失败');
+    return apiPost({ t: DATABASE_ID, op: 'register', u: u, name: name, pwd: pwd, pwd2: pwd }).then(function (j) {
       if (!j.session) throw new Error('云端没有返回会话');
       return j.session;
     });
+  }
+  /* 用管理员重置码在【云端】重设密码。
+     这一点很关键：云端才是登录校验的真身，只在本地改哈希等于没改 ——
+     换台设备/清缓存就会「用新密码登不上」。所以重设必须打到云端。
+     重设走 op=resetPwd + 重置码，不需要登录会话。 */
+  function cloudResetPwd(u, code, pwd) {
+    return apiPost({ t: DATABASE_ID, op: 'resetPwd', u: u, code: code, pwd: pwd }).then(function () { return true; });
   }
   // 拿到云端会话后：以【云端账号表】为准刷新本机，再完成登录。
   // 关键：绝不能拿本机（可能是旧的、别的设备的）账号表覆盖云端 —— 那会把云端正确
@@ -2166,7 +2184,12 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     lsSetAccounts(state.accounts);
     renderAccounts();
     return cloudSaveSettings({ '账号表': { text: JSON.stringify(state.accounts) } }).then(function (ok) {
-      setAccSync(ok ? 'ok' : ((HAS_DB && SET_DB_ID) ? 'fail' : 'local'));
+      if (ok) setAccSync('ok');
+      // 云端函数路径下还没登录（没有会话）时，写云端必被拒 —— 这是登录前的正常状态，
+      // 不是错误，别在登录页上摆一条吓人的红字。等登录后「账号」面板里再看真实同步状态。
+      else if (USE_CLOUD_FN && !state.cloudToken) setAccSync('');
+      else if (HAS_DB && SET_DB_ID) setAccSync('fail');
+      else setAccSync('local');
       return ok;
     });
   }
@@ -2306,23 +2329,48 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var p = $('#rpPwd') ? $('#rpPwd').value : '';
     var p2 = $('#rpPwd2') ? $('#rpPwd2').value : '';
     if (!u) { authErr('请填要重设的用户名'); return; }
-    if (code !== RESET_CODE) { authErr('重置码不对，找管理员要'); return; }
-    if (!findAccount(u)) { authErr('这个用户名还没注册'); return; }
+    if (!code) { authErr('请填管理员的重置码'); return; }
     if (p.length < 6) { authErr('新密码至少 6 位'); return; }
     if (p !== p2) { authErr('两次输入的新密码不一样'); return; }
-    var salt = makeSalt();
-    saveAccounts(getAccounts().map(function (x) {
-      if (normUser(x.u) === u) { x.salt = salt; x.h = pwdHash(p, salt); }
-      return x;
-    })).then(function (ok) {
+
+    // 重设成功后的统一收尾：清空敏感输入、回到登录面板、把用户名填好、密码留空
+    function done(msg) {
       authErr('');
-      toast(ok ? '密码已重设：用新密码登录吧' : '密码已改，但没同步到云端 —— 换电脑会登录不上');
+      toast(msg);
       ['#rpCode', '#rpPwd', '#rpPwd2'].forEach(function (s) { var n = $(s); if (n) n.value = ''; });
       var rp = $('#authReset'); if (rp) rp.classList.add('hide');
       $('#authLogin').classList.remove('hide');
       var pu = $('#auUser'); if (pu) pu.value = u;
       var pp = $('#auPwd'); if (pp) pp.value = '';
+    }
+
+    // 云端模式：交给云函数改（云端才是登录校验的真身），改完云端就是新密码，换设备照样能登。
+    // 重置码由云端校验（页面不再本地拦，免得两处口令不一致把用户挡在门外）。
+    if (USE_CLOUD_FN) {
+      cloudResetPwd(u, code, p).then(function () {
+        // 云端已经改好了，本机那份哈希等下次登录时由 afterCloudAuth 从云端刷回来，这里不动它，
+        // 以免把本机旧格式哈希推回云端、反而把云端刚设好的密码顶掉。
+        done('密码已重设，云端已同步：用新密码登录吧');
+      }).catch(function (err) {
+        var s = String((err && err.message) || err || '');
+        authErr(/重置码/.test(s) ? '重置码不对，找管理员要'
+              : /用户|不存在|未找到/.test(s) ? '这个用户名还没注册'
+              : ('重设失败：' + s));
+      });
+      return;
+    }
+
+    // 本地方案（没有云端）：只改本机
+    if (code !== RESET_CODE) { authErr('重置码不对，找管理员要'); return; }
+    if (!findAccount(u)) { authErr('这个用户名还没注册'); return; }
+    var salt = makeSalt();
+    state.accounts = getAccounts().map(function (x) {
+      if (normUser(x.u) === u) { x.salt = salt; x.h = pwdHash(p, salt); }
+      return x;
     });
+    lsSetAccounts(state.accounts);
+    renderAccounts();
+    done('密码已重设：用新密码登录吧');
   }
 
   function doLogout() {
@@ -4198,23 +4246,29 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     setSync(HAS_DB ? 'syncing' : 'local');
     renderOfflineBar();   // 离线（本地文件 / 本地预览）时，登录页直接给出线上地址
 
-    // 先把云端设置（设计师名单 + 账号表）拉回来，再决定是进主界面还是挡在登录页
+    // 先恢复本地存着的云端会话（还没过期的话）—— 顺序很关键：
+    // 下面读云端设置、同步账号表都要带上它。早先是「读完设置之后」才恢复会话，
+    // 结果读设置时还没带上会话，被云函数当成「未登录」拒绝，还误报同步失败。
+    var restoredCloud = false;
+    if (HAS_DB) {
+      var ctok0 = lsGetCloud();
+      if (ctok0) {
+        var claims0 = decodeJwt(ctok0);
+        if (claims0 && (!claims0.exp || claims0.exp > Date.now())) { setCloudToken(ctok0); restoredCloud = true; }
+        else lsSetCloud('');
+      }
+    }
+
+    // 再把云端设置（设计师名单 + 账号表）拉回来，然后决定是进主界面还是挡在登录页
     restoreSettings().then(function () {
       // 云端模式：本地存着没过期的云端会话 → 直接带会话进主界面（换设备/刷新不用重登）
-      if (HAS_DB) {
-        var ctok = lsGetCloud();
-        if (ctok) {
-          var claims = decodeJwt(ctok);
-          if (claims && (!claims.exp || claims.exp > Date.now())) {
-            setCloudToken(ctok);
-            var cAcc = findAccount(claims.u) || { u: claims.u, name: claims.name || claims.u, role: claims.role === 'boss' ? 'boss' : 'designer' };
-            applySession({ u: cAcc.u, name: cAcc.name, role: cAcc.role });
-            hideAuthGate();
-            startApp();
-            return;
-          }
-          lsSetCloud('');
-        }
+      if (restoredCloud) {
+        var claims = decodeJwt(state.cloudToken) || {};
+        var cAcc = findAccount(claims.u) || { u: claims.u, name: claims.name || claims.u, role: claims.role === 'boss' ? 'boss' : 'designer' };
+        applySession({ u: cAcc.u, name: cAcc.name, role: cAcc.role });
+        hideAuthGate();
+        startApp();
+        return;
       }
       var sess = lsGetSession();
       var acc = sess && findAccount(sess.u);
