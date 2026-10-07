@@ -1119,11 +1119,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     <div id="authLogin" data-page-node-id="zmpByuOyujXMsW3JcEbt85">
       <div class="field" data-page-node-id="LTZhxzCUobmdQGExjPReGv">
         <label for="auUser" data-page-node-id="oZI0flIOS9BV0t2w81rjGD">用户名</label>
-        <input id="auUser" type="text" autocomplete="username" placeholder="手机号或姓名" data-page-node-id="IVFZWeoFWf2uBgCQc0B2aW">
+        <input id="auUser" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="手机号或姓名" data-page-node-id="IVFZWeoFWf2uBgCQc0B2aW">
       </div>
       <div class="field" data-page-node-id="7i9bPaFpwQLVlSZK12mHCT">
         <label for="auPwd" data-page-node-id="m9OrqxNSYMmFcF5baLowgG">密码</label>
-        <input id="auPwd" type="password" autocomplete="current-password" placeholder="请输入密码" data-page-node-id="0l5HKGtpe0eddUGIxC2VZl">
+        <input id="auPwd" type="password" autocomplete="new-password" placeholder="请输入密码" data-page-node-id="0l5HKGtpe0eddUGIxC2VZl">
       </div>
       <button class="btn primary" id="auLogin" data-page-node-id="vIXMTTv60E8cbAy1tmFjKw">登录</button>
       <div class="auth-sw" data-page-node-id="oKq4zvmnDvbajwBdf9jVSR">还没有账号？<button class="linkbtn" id="auGoReg" data-page-node-id="yzEJoFx6txQQOT2iGFgOkw">注册设计师账号</button></div>
@@ -1841,9 +1841,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     return '';
   }
   function setAccSync(kind, msg) {
-    // 登录门还没跨过去（云端函数路径下还没有会话）时，一律不显示「同步失败」警告：
-    // 登录前本来就没连上云端，这不是错误。真正的同步状态等登录后在「账号」面板里看。
-    if (kind === 'fail' && USE_CLOUD_FN && !state.cloudToken) kind = '';
+    // 自托管云函数（线上 GitHub Pages）路径下：
+    //  · 这条「账号已同步到云端：换台电脑打开同一个链接…」的绿条太啰嗦，用户明确不要，直接不显示；
+    //  · 登录门还没跨过去（没有会话）时的「同步失败」红框也不显示 —— 登录前本来就还没连云端，不是错误。
+    // 真正的同步状态，等登录后在「账号」面板里看。
+    if (USE_CLOUD_FN && (kind === 'ok' || (kind === 'fail' && !state.cloudToken))) kind = '';
     state.accSync = kind;
     // 没同步成功时，分清「浏览器没登录平台」和「网络/其他原因」，别让用户瞎查网络
     var text = msg || (kind === 'fail'
@@ -2227,10 +2229,16 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var ow = $('#ownerWrap'); if (ow) ow.classList.toggle('hide', !!me && me.role === 'designer');
   }
 
+  /** 清空登录/注册门上的输入框 —— 退出后用户名、密码一律留空白，不把上次的填回去 */
+  function clearAuthInputs() {
+    ['#auUser', '#auPwd', '#ruUser', '#ruName', '#ruPwd', '#ruPwd2', '#rpUser', '#rpCode', '#rpPwd', '#rpPwd2']
+      .forEach(function (s) { var n = $(s); if (n) n.value = ''; });
+  }
   function showAuthGate() {
     document.body.classList.add('auth-lock');
     var g = $('#authGate'); if (g) g.classList.remove('hide');
     var t = $('#authTip'); if (t) t.textContent = '';
+    clearAuthInputs();
   }
   function hideAuthGate() {
     document.body.classList.remove('auth-lock');
@@ -2386,6 +2394,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       renderMe();
       renderOwnerBar();
       showAuthGate();
+      // 退出后登录页不再留上次的「已同步到云端」绿条：清空同步提示
+      setAccSync('');
     });
   }
 
