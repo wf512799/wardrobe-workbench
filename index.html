@@ -995,6 +995,15 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   .drow{grid-template-columns:62px repeat(3,minmax(0,1fr));gap:4px;padding:8px 5px}
 }
 
+/* ---------- 第十六轮：登录过期就地重登（会话失效时不再只丢一句「保存失败」）---------- */
+/* 就地重登时，登录门上的提示条改成警示色，用户一眼知道是「过期了」不是「密码错了」 */
+.auth.relogin #authTip{
+  color:#B4451F;font-weight:700;
+  background:rgba(226,124,60,.10);
+  border:1px solid rgba(226,124,60,.28);
+  border-radius:9px;padding:7px 10px;display:block;
+}
+.auth.relogin #authTip:empty{display:none}
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
@@ -1961,7 +1970,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     setSync('syncing');
     function fail(err) {
       console.error('[order] 保存失败:', err);
-      setSync('offline');
+      // 会话过期不算「离线」——网是通的，是登录状态失效了。
+      // 标成 offline 会误导用户去查网络，所以这里单独区分。
+      if (!isSessionExpired(err)) setSync('offline');
       return Promise.reject(err);
     }
     if (id) {
@@ -1979,7 +1990,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       .then(function () { toast('已删除'); return loadData(); })
       .catch(function (err) {
         console.error('[order] 删除失败:', err);
-        setSync('offline');
+        if (!isSessionExpired(err)) setSync('offline');
         return Promise.reject(err);
       });
   }
@@ -2431,6 +2442,77 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       });
     });
   }
+  /** 会话失效类错误：云函数对「没带会话 / 会话过期 / 签名不对」一律回这句 */
+  function isSessionExpired(err) {
+    var s = String((err && err.message) || err || '');
+    return /登录状态失效|请重新登录|会话.*(失效|过期)|SESSION/i.test(s);
+  }
+  /** 页面发起的写入被「会话过期」拒掉时，把这次要做的事先记下来：
+     引导用户重新登录，登成功后自动重做一次，用户不用再手填一遍。 */
+  var pendingAfterLogin = null;
+  function needRelogin(what, retry) {
+    pendingAfterLogin = typeof retry === 'function' ? retry : null;
+    setSync('offline');
+    toast('登录已过期，请重新登录' + (what ? '，登录后会自动' + what : ''));
+    askConfirm(
+      (pendingAfterLogin ? '刚才的操作已经留着了。' : '') +
+      '登录状态已过期（为了安全，每次登录有效期 12 小时）。重新登录后就能继续操作。',
+      '重新登录',
+      function () { reloginInline(); }
+    );
+  }
+  /**
+   * 操作失败的统一兜底：会话过期 → 引导重登 + 登录后自动重试；其它 → 普通失败提示。
+   * 「登录过期」和「网络断了」是两回事，提示不能混为一谈，否则用户会去瞎查网络。
+   * @param err 捕获到的错误
+   * @param what 会话过期时，登录后要自动做的事（如「重新保存这次修改」）
+   * @param retry 登录成功后的重试函数
+   * @param fallbackMsg 非会话失效时的提示文案
+   */
+  function handleOpFail(err, what, retry, fallbackMsg) {
+    console.error('[order] 操作失败:', err);
+    if (USE_CLOUD_FN && isSessionExpired(err)) {
+      needRelogin(what, retry);
+      return true;
+    }
+    setSync('offline');
+    toast(fallbackMsg);
+    return false;
+  }
+  /** 弹出登录门让用户就地重登，登成功后接上 pendingAfterLogin */
+  function reloginInline() {
+    setCloudToken('');
+    document.body.classList.add('auth-lock');
+    var g = $('#authGate'); if (g) g.classList.remove('hide');
+    if (g) g.classList.add('relogin');
+    var t = $('#authTip');
+    if (t) t.textContent = '登录状态已过期，请重新登录';
+    var u = $('#auUser');
+    if (u) { u.value = (state.me && state.me.u) || ''; }
+    var p = $('#auPwd'); if (p) { p.value = ''; p.focus(); }
+  }
+  /** 登录完成后把「刚才没做完的事」接着做完（只跑一次） */
+  function runPendingAfterLogin() {
+    var fn = pendingAfterLogin;
+    pendingAfterLogin = null;
+    if (typeof fn !== 'function') return;
+    try { fn(); } catch (e) { console.error('[order] 登录后重试失败:', e); }
+  }
+  /**
+   * 静默续期：拿还在有效期内的会话，向云函数换一张新的（更长的有效期）。
+   * 完全后台进行 —— 成功就悄悄换掉 token，失败什么都不做（该过期还是会过期，
+   * 到时会走 needRelogin 那条路）。目的是让常用的人永远碰不到「登录过期」。
+   */
+  var renewTried = false;
+  function silentRenewSession() {
+    if (renewTried || !USE_CLOUD_FN || !state.cloudToken) return;
+    renewTried = true;
+    apiPost({ t: DATABASE_ID, op: 'renew', session: state.cloudToken })
+      .then(function (j) {
+        if (j && j.session) setCloudToken(j.session);
+      })
+      .catch(function () { /* 续期失败无所谓，正常用；真过期了会提示重登 */ });
+  }
   // 向云函数换取登录会话；返回 Promise<session 字符串>
   function cloudLogin(u, pwd) {
     return apiPost({ t: DATABASE_ID, op: 'login', u: u, pwd: pwd }).then(function (j) {
@@ -2485,11 +2567,17 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var sess = { u: acc.u, name: acc.name, role: acc.role, at: todayISO() };
     lsSetSession(sess);
     hideAuthGate();
+    var g = $('#authGate'); if (g) g.classList.remove('relogin');
     applySession(sess);
     startApp();
     // 关键：这里【绝不】回推账号表。本机可能是旧数据/别的设备，回推会把云端正确
     // 的密码哈希覆盖掉 —— 那正是「第一次能登、退出后再也登不上」的元凶。
     toast('登录成功，账号已与云端连通');
+    // 登录后重新计时，并允许下一次静默续期
+    renewTried = false;
+    silentRenewSession();
+    // 若是「会话过期 → 重新登录」，把刚才没做完的那次写入接着做完
+    runPendingAfterLogin();
   }
 
   function getAccounts() { return state.accounts || []; }
@@ -4296,7 +4384,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
           refreshAll(); flashRow(id);
           toast('已推进到「' + nextName + '」');
         })
-        .catch(function (err) { console.error('[order] 推进失败:', err); toast('推进失败，请重试'); });
+        .catch(function (err) {
+          handleOpFail(err, '重新推进到「' + nextName + '」', function () { saveRecord(props, id).then(function () { refreshAll(); }); }, '推进失败，请重试');
+        });
     });
   }
   function backRow(id) {
@@ -4308,9 +4398,12 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     var prevName = STAGES[si - 1].name;
     askConfirm('把「' + esc(row['客户姓名']) + '」回退到「' + prevName + '」？', '回退', function () {
       var sid = optionIdByText(prevName) || prevName;
-      saveRecord({ '阶段': { select: sid }, '更新日期': { date: todayISO() } }, id)
+      var props = { '阶段': { select: sid }, '更新日期': { date: todayISO() } };
+      saveRecord(props, id)
         .then(function () { state.stage = prevName; state.focusId = id; refreshAll(); flashRow(id); })
-        .catch(function (err) { console.error('[order] 回退失败:', err); toast('回退失败，请重试'); });
+        .catch(function (err) {
+          handleOpFail(err, '重新回退到「' + prevName + '」', function () { saveRecord(props, id).then(function () { refreshAll(); }); }, '回退失败，请重试');
+        });
     });
   }
   function markFollowToday(id) {
@@ -4323,7 +4416,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         if (scrollTarget !== id) flashRow(id);
         toast('已把「' + (row['客户姓名'] || '未命名客户') + '」的下次跟进设为今天');
       })
-      .catch(function (err) { console.error('[order] 更新跟进日期失败:', err); toast('保存失败，请重试'); });
+      .catch(function (err) {
+        handleOpFail(err, '重新设置为今天',
+          function () { saveRecord({ '跟进日期': { date: todayISO() } }, id).then(function () { refreshAll(); }); },
+          '保存失败，请重试');
+      });
   }
   function delRow(id) {
     var row = findRow(id);
@@ -4332,7 +4429,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       removeRecord(id).then(function () {
         if (state.focusId === id) state.focusId = '';
         refreshAll();
-      }).catch(function (err) { console.error('[order] 删除失败:', err); toast('删除失败，请重试'); });
+      }).catch(function (err) {
+        handleOpFail(err, '重新删除这张订单',
+          function () { removeRecord(id).then(function () { if (state.focusId === id) state.focusId = ''; refreshAll(); }); },
+          '删除失败，请重试');
+      });
     });
   }
   function markRefund(id) {
@@ -4348,7 +4449,11 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
           loadData().then(function () { flashRow(id); });
           toast('已标为「退单」');
         })
-        .catch(function (err) { console.error('[order] 标记退单失败:', err); toast('标记失败，请重试'); });
+        .catch(function (err) {
+          handleOpFail(err, '重新标记退单',
+            function () { saveRecord({ '阶段': { select: sid } }, id).then(function () { loadData(); }); },
+            '标记失败，请重试');
+        });
     });
   }
   function toggleDetail(id) {
@@ -4692,11 +4797,20 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         loadData().then(function () { rid && flashRow(rid); });
       })
       .catch(function (err) {
-        console.error('[order] 保存失败:', err);
-        setSync('offline');
-        toast('保存失败，请重试（若在资料库中打开请确认已登录）');
-      })
-      .then(function () { btn.disabled = false; btn.textContent = '保存'; });
+        btn.disabled = false; btn.textContent = '保存';
+        // 会话过期（登录超过 12 小时）：别把锅甩给「网络 / 没登录资料库」，
+        // 直说是登录过期，并把表单留住、引导重登，登成功自动把这次保存补上。
+        var keepOn = USE_CLOUD_FN && isSessionExpired(err);
+        if (keepOn) cacheDraft();
+        handleOpFail(err,
+          wasEdit ? '重新保存这次修改' : '重新提交这张订单',
+          function () {
+            state.editId = wasEdit ? editId : '';
+            var b = $('#btnSave');
+            if (b && !b.disabled) b.click();
+          },
+          '保存失败，请重试（若在资料库中打开请确认已登录）');
+      });
   }
 
   /* ---------------- 事件绑定 ---------------- */
@@ -5016,6 +5130,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
         applySession({ u: cAcc.u, name: cAcc.name, role: cAcc.role });
         hideAuthGate();
         startApp();
+        // 顺手把会话续到新有效期（静默，失败不影响使用）——
+        // 常用的人每次打开自动续，就不会在录单录到一半时撞上「登录过期」。
+        silentRenewSession();
         return;
       }
       var sess = lsGetSession();
