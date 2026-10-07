@@ -2429,15 +2429,29 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   function lsSetCloud(tok) {
     try { if (tok) window.localStorage.setItem(CLOUD_SESSION_KEY, tok); else window.localStorage.removeItem(CLOUD_SESSION_KEY); } catch (e) {}
   }
+  /**
+   * 解析会话凭证的载荷部分。
+   *
+   * 会话格式是 base64url(payload) + '.' + base64url(HMAC签名)，两段。
+   * ⚠️ 载荷在 parts[0]，签名在 parts[1]。
+   * 2026-10-07 修：这里原来取的是 parts[1]（签名），而签名是二进制哈希的 base64、
+   * 不是 JSON，JSON.parse 必然失败 → 整个函数返回 null → 所有调用方都以为
+   * 「会话坏了」→ 表现就是「刷新一下就要重新登录」。签名服务端会校验，
+   * 前端只需要读载荷里的 exp / u / role。
+   */
   function decodeJwt(tok) {
     try {
       var parts = String(tok).split('.');
       if (parts.length < 2) return null;
-      var b = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      var b = parts[0].replace(/-/g, '+').replace(/_/g, '/');
       while (b.length % 4) b += '=';
       var bin = window.atob(b);
       var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
-      return JSON.parse(new TextDecoder('utf-8').decode(bytes)) || {};
+      var obj = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+      // 兜底：万一解出来的不是我们认识的结构（比如服务端换了格式），
+      // 宁可返回 null 让调用方走「未登录」分支，也别把半截对象传出去。
+      if (!obj || typeof obj !== 'object') return null;
+      return obj;
     } catch (e) { return null; }
   }
   function setCloudToken(tok) { state.cloudToken = tok || ''; lsSetCloud(tok); }
@@ -2475,7 +2489,7 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     toast('登录已过期，请重新登录' + (what ? '，登录后会自动' + what : ''));
     askConfirm(
       (pendingAfterLogin ? '刚才的操作已经留着了。' : '') +
-      '登录状态已过期（为了安全，每次登录有效期 12 小时）。重新登录后就能继续操作。',
+      '登录状态已过期（为了安全，登录凭证有有效期，到期需要重新登录一次）。重新登录后就能继续操作。',
       '重新登录',
       function () { reloginInline(); }
     );
