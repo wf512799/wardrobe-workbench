@@ -977,6 +977,27 @@ body.auth-lock>footer{display:none}
   /* 屏幕本身不到 1024px 时，别留多余边距，照旧铺满可用宽度 */
   .dash{max-width:none}
 }
+
+/* ---------- 第十八轮：整页宽度统一收到 1024px（跟大屏一致）---------- */
+/* 用户要求「页面宽度改 1024」。v10 只单收了大屏（.dash 1024），顶栏/主区/页脚/菜单条
+   仍是 1640px，宽屏下订单页比大屏宽一截，切换视图时边缘会跳。
+   这里把这几块也一并收到 1024px，整页统一 —— 顶栏 .top 是全宽背景条（内容居中），
+   但它的内容宽度跟着下方 1024 的内容走，视觉上就对齐了。
+   注意：只改这几处的 max-width（居中已由各自的 margin:0 auto 负责），
+   不动任何布局属性（display / grid / padding / flex），订单页与大屏的排布逻辑不变。 */
+main,
+footer,
+.pagemenu{max-width:1024px}
+
+@media (max-width:1023px){
+  /* 屏幕本身不到 1024px 时，照旧铺满可用宽度（与 .dash 同规则） */
+  main,
+  footer,
+  .pagemenu{max-width:none}
+}
+/* 顶栏内部也收一个上限，避免 1640 宽屏下「标题贴最左、按钮贴最右」拉得太开。
+   顶栏是 flex 居中 + 全宽背景条，这里只约束内容区宽度，背景仍铺满整屏。 */
+.top{padding-left:max(16px,calc((100% - 1024px)/2 + 16px));padding-right:max(16px,calc((100% - 1024px)/2 + 16px))}
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
