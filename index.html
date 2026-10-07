@@ -273,62 +273,11 @@ main{
 .m-c.c1,.m-c.c5{background:#FAF6F0}
 .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:16px 8px}
 
-/* ---------- 左右两条统计窄栏：宽屏各占一列（都是 300px），页面下滑时钉在原地不动 ---------- */
+/* ---------- 宽屏：中间那栏留给订单，9 个阶段胶囊改成换行铺开 ---------- */
+/* 2026-10-07：原来这里还有左右两条统计窄栏（.col-side / #monthAside / #statAside）的
+   三列 grid 布局（380px | 1fr | 300px）。两个侧栏已整体删除，main 回归默认单列
+   （见上面 main{grid-template-columns:minmax(0,1fr)}），订单区自动铺满整页宽度。 */
 @media (min-width:1240px){
-  /* 左栏「月度统计」加宽到 380px（月度明细表能摊成三列，数字不再挤成竖条）
-     中栏「今天 + 订单」吃掉剩下的，右栏「数据统计」维持 300px */
-  main{grid-template-columns:380px minmax(0,1fr) 300px}
-  main > *{grid-row:1}
-  #monthAside{grid-column:1}
-  .col-main{grid-column:2}
-  #statAside{grid-column:3}
-  .col-side{
-    position:sticky; top:74px; align-self:start;
-    max-height:calc(100vh - 86px); overflow-y:auto;
-    padding-right:2px;
-  }
-  .col-side::-webkit-scrollbar{width:5px}
-  .col-side::-webkit-scrollbar-track{background:transparent}
-  .col-side::-webkit-scrollbar-thumb{background:#E2D8CA;border-radius:3px}
-  /* 全部按小尺寸压一遍，别把左边的内容挤下去 */
-  .col-side > .card{padding:10px}
-  .col-side .card-h{margin-bottom:6px}
-  .col-side .card-h h2{font-size:13.5px}
-  .col-side .card-h h2 svg{width:15px;height:15px}
-  .col-side .badge{padding:1px 7px;font-size:11px}
-  .col-side .hintline{font-size:11px;margin:-3px 0 6px;line-height:1.5}
-  /* 右栏里 KPI 一律两行两列，3 列在 300px 内挤不开 */
-  .col-side .kpis,.col-side .kpis.k3{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:7px}
-  .col-side .kpis.k3 .kpi:last-child{grid-column:span 2}
-  .col-side .kpi{padding:6px 9px}
-  .col-side .kpi b{font-size:15px}
-  .col-side .kpi span{font-size:11px}
-  .col-side .kpi em{font-size:10px;min-height:12px;margin-top:1px}
-  .col-side .seg button{padding:4px 9px;font-size:11.5px;min-height:26px}
-  .col-side .s-row{padding:3px 2px;gap:6px}
-  .col-side .s-n{width:44px;font-size:11.5px}
-  .col-side .s-track{height:7px}
-  .col-side .s-v{width:20px;font-size:12px}
-  .col-side .chart-wrap svg{max-width:100%}
-  /* 月度明细表高度封顶：正好露出 3 个月（脚本按实测行高写 maxHeight），
-     第 4 个月起在这框里自己滚，左栏卡片不再拖着整页一起变长 */
-  .col-side .m-scroll{max-height:390px;padding-right:3px}
-  /* 年度 / 月度表：年份（月份）独占一行，下面 5 个指标按栏宽摊开
-     —— 左栏「月度统计」380px 摊三列，右栏「年度统计」只有 300px，摊两列 */
-  .col-side .m-row{display:grid;gap:1px 4px;padding:6px 3px}
-  #monthAside .m-row{grid-template-columns:repeat(3,minmax(0,1fr))}
-  #statAside .m-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .col-side .m-c{padding:3px 4px}
-  .col-side .m-c i{font-size:10.5px}
-  .col-side .m-c b{font-size:13px}
-  .col-side .m-c.c-mo{grid-column:span 2;justify-content:flex-start;margin-bottom:2px}
-  #monthAside .m-c.c-mo{grid-column:span 3}
-  .col-side .m-c.c5{grid-column:span 2;background:#FAF6F0}
-  /* 月度 5 张 KPI：3 列排（前 3 张一行，扣款 + 净额占一行），
-     这样 KPI 只占 2 行，省下来的高度正好给下面的柱体加高 */
-  .col-side .m-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .col-side .m-kpis .kpi:last-child{grid-column:span 2}
-  /* 中间那栏留给订单，9 个阶段胶囊改成换行铺开，不再左右藏着拖 */
   .col-main .tabs{flex-wrap:wrap;overflow:visible;padding-bottom:0}
 }
 
@@ -1250,84 +1199,6 @@ body.auth-lock>footer{display:none}
   </section>
 
  </div><!-- /.col-main -->
-
- <!-- 左侧栏：只放「月度统计」，宽屏时钉在左边不动（尺寸与右侧「数据统计」一致） -->
- <aside class="col-side" id="monthAside" data-page-node-id="CLz9tcKVCMEVWXD5WIA5Je">
-
-  <section class="card" id="monthSection" data-page-node-id="IdKMD6C43mtFDR5lSiZqls">
-    <div class="card-h" data-page-node-id="HufKUXLv3530O1Qy0dS7Hy">
-      <h2 data-page-node-id="B59GFDHZX9b1XT6Koef4p2">
-        <svg viewBox="0 0 24 24" data-page-node-id="zgvmXxkmAdS8RtQnMO2kzO"><rect x="3" y="5" width="18" height="16" rx="2" data-page-node-id="JcXFwTCq15XDlWGNkbWmyw"/><line x1="3" y1="10" x2="21" y2="10" data-page-node-id="FnvXuqWtzTi7loFmJArm7T"/><line x1="8" y1="14" x2="8" y2="18" data-page-node-id="TIs74VNopJDqs9qNMoTpvy"/><line x1="13" y1="12" x2="13" y2="18" data-page-node-id="uO0XsXCGHh7hkTBrM6wCY2"/><line x1="18" y1="16" x2="18" y2="18" data-page-node-id="NLN9HgyeghqH2vvzt3Prrj"/></svg>
-        月度统计
-      </h2>
-      <span class="badge" id="monthBadge" data-page-node-id="pgKGk9nedzcVXFqchh7j9k">按接单月</span>
-    </div>
-    <div class="hintline" data-page-node-id="troxPhPjVvAYWt4GbLDWIM">按<b data-page-node-id="hUCDDzsCnu55gdqedclAW0">接单月</b>汇总：<b data-page-node-id="HxZ8h1eu7chlZKT986zvBV">订单总数</b> = 这个月接了多少单；<b data-page-node-id="rMLuUH9DmOHTyaPlgQ7YE7">下单单数 / 提成 / 扣款</b> 都按「更新日期（下单日期）」归月，不看接单时间，退单不算。点表格行或柱体只看那个月。</div>
-    <div class="kpis m-kpis" data-page-node-id="lzSJmSMZ7klVuTAEfRaZ9q">
-      <div class="kpi" data-page-node-id="Ksl7DbNIamFpAoR3WxHhCb"><b data-m="mtotal" data-page-node-id="7BEezzldTj8Yw2MXm0QKlZ">0</b><span data-page-node-id="7JCc2qVZeu8OFKGxnA2jVR">订单总数</span></div>
-      <div class="kpi" data-page-node-id="KPbe7HBDF4E8Nl5Yufb2uz"><b data-m="mordered" data-page-node-id="wS6mkGX8X7x7DpRSnuCRuM">0</b><span data-page-node-id="YXoSURKo9ptE0hcw6xIDV3">已下单</span></div>
-      <div class="kpi" data-page-node-id="Uw47E1oHCX8hf7KGpNGb3V"><b data-m="mcommission" data-page-node-id="7tMYqWNfSA1AdM8QX7y7M9">¥0</b><span data-page-node-id="q65mP5xFm1DhpvWi7WAflp">提成合计</span></div>
-      <div class="kpi" data-page-node-id="q2rQknkrjribYbA07YcojP"><b data-m="mdeduction" data-page-node-id="bTzgBj3l8LMpLf9GIfRJMC">¥0</b><span data-page-node-id="PR9eOaDk5RxgZdFFZBceff">扣款合计</span></div>
-      <div class="kpi" data-page-node-id="3P8InGFthN5WkmvMpwaZ2H"><b data-m="mnet" data-page-node-id="EexEiffkvAlJ6VH7X6Hed6">¥0</b><span data-page-node-id="MmMEzp1TxEh0rZ9rlpmGaq">净额（提成−扣款）</span></div>
-    </div>
-    <div class="m-scroll" id="monthScroll" data-page-node-id="vI2leyZWKDECzaGYiKrjZW">
-      <div class="m-table" id="monthTable" data-page-node-id="eF1yipuBt3Ddmd6Hvc9z9E"></div>
-    </div>
-    <div class="m-more" id="monthMore" data-page-node-id="3KoFbFiCf0kbA1ACmx5C80">下滑看更多月份 ▾</div>
-    <!-- 月度柱体：净额一排、扣款一排，同排在一条线上横着比，一眼看出哪月净额最高 / 哪月扣款最多 -->
-    <div class="mb-wrap" id="monthBars" data-page-node-id="4lpHX1vIKyTtnTLGRgkZmn">
-      <div class="mb-line net" id="mbLineNet" data-page-node-id="IFimL9rC8IZk1TqrzCrwVM">
-        <span class="mb-tag" id="mbTagNet" data-page-node-id="QjznZuCR9g7eymXETcMimo">净额</span>
-        <div class="mb-axis" id="mbNetAxis" data-page-node-id="Xpzq7OkC7qD9aadCBm5X9Y"></div>
-      </div>
-      <div class="mb-line ded" id="mbLineDed" data-page-node-id="673hfihq3bqnj7ENZE3hFl">
-        <span class="mb-tag" id="mbTagDed" data-page-node-id="nDKjGSeGz4H7eRGxpOjEAf">扣款</span>
-        <div class="mb-axis" id="mbDedAxis" data-page-node-id="VV9J7eqDqqkuFSgonjXgdL"></div>
-      </div>
-      <div class="mb-foot" id="monthBarFoot" data-page-node-id="ufEND29lXS5WA2AVwe8AZ1"></div>
-    </div>
-  </section>
-
- </aside><!-- /.col-side -->
-
- <!-- 右侧栏：只放「年度统计」，宽屏时钉在右边不动 -->
- <aside class="col-side" id="statAside" data-page-node-id="hdhsJNR1Hy8U3oy5fb24qO">
-
-  <!-- 年度统计：数据统计已独立成菜单，这一栏只留年度汇总 -->
-  <section class="card" id="yearSection" data-page-node-id="eNpxE5L0d10ItpUXL9sEav">
-    <div class="card-h" data-page-node-id="vjTmuC6iSJeFCxa4TyCjnr">
-      <h2 data-page-node-id="BEuA6o6KJzt3CbMvFEBPBU">
-        <svg viewBox="0 0 24 24" data-page-node-id="tR5rCyrijowCTCSwxVz7AI"><line x1="12" y1="20" x2="12" y2="6" data-page-node-id="ZjIRk2Xt7UztyihBNOicB4"/><line x1="7" y1="20" x2="7" y2="11" data-page-node-id="bCZjQn2N2U3CsbTZNFyKgg"/><line x1="17" y1="20" x2="17" y2="13" data-page-node-id="OYtzwfMNH4DFrvoaFMND8f"/></svg>
-        年度统计
-      </h2>
-      <span class="badge" id="yearBadge" data-page-node-id="EeBVgm0Ci7ouod2MZ5JXXQ">按接单年</span>
-    </div>
-    <div class="hintline" data-page-node-id="VXEvPNhysGavlJsWWSCt6p">按<b data-page-node-id="eKup8xBdFkQzetKEwVcpbq">接单年</b>汇总：<b data-page-node-id="sR85r6XUhvfwJOnGLnoaQn">订单总数</b> = 这一年一共接了多少单；<b data-page-node-id="a9Rj4LFKGDnNRN1aAYCFxy">下单单数 / 提成 / 扣款</b> 都按「更新日期（下单日期）」归年，不看接单时间，退单不算。点表格行或按<b data-page-node-id="YBMuqFZdg3NZN9q4ynPFk8">接单年</b>，只看那一年。</div>
-    <div class="kpis m-kpis" data-page-node-id="L4729RsISAq8GLqxYaO35V">
-      <div class="kpi" data-page-node-id="gHxpNjbpek68hBO1RuJrz5"><b data-y="ytotal" data-page-node-id="qSHxoUtRWboIUcxOITUgRF">0</b><span data-page-node-id="td8WLesI4bF00LkRynUsVF">订单总数</span></div>
-      <div class="kpi" data-page-node-id="svbI3F5JAl8cdA5UQdlN6c"><b data-y="yordered" data-page-node-id="Thiv4uK42hUxLm9ItEtGXd">0</b><span data-page-node-id="JfGgBZ1k0xHE7vBGC9GWMD">已下单</span></div>
-      <div class="kpi" data-page-node-id="t2GvGtEEcC0TQ5TEzJi4h7"><b data-y="ycommission" data-page-node-id="Uq6WtTBceBkxNXstnrCxjE">¥0</b><span data-page-node-id="ZSDsSfoEFtIhgXSusKde0w">提成合计</span></div>
-      <div class="kpi" data-page-node-id="VcCfHVCZAwFpT3N5yHEHvZ"><b data-y="ydeduction" data-page-node-id="BbreADyGfmvjhDoC2PR8Lz">¥0</b><span data-page-node-id="hrwPuZz4F8o6rL8wwvlrEa">扣款合计</span></div>
-      <div class="kpi" data-page-node-id="2tACzMHEAIlxxho3QBBeGR"><b data-y="ynet" data-page-node-id="DH0KBMSVz6TfgvL8lESsvv">¥0</b><span data-page-node-id="FbASBUHRKO8IWopbDwzKxU">净额（提成−扣款）</span></div>
-    </div>
-    <div class="m-table" id="yearTable" data-page-node-id="ODGpX29JVHeTgds6bj5XW6"></div>
-
-    <!-- 年度柱体：净额一排、扣款一排 —— 同一排里横着比高低，
-         看哪一年净额最高 / 哪一年扣款最多（两排各用自己的高度尺） -->
-    <div class="mb-wrap" id="yearBars" data-page-node-id="zamQnRzq62jFO3eX2GG9iH">
-      <div class="mb-line net" id="mbYearNet" data-page-node-id="7VgwFRjBJPl760giX1DhDh">
-        <span class="mb-tag" id="mbYearTagNet" data-page-node-id="4qowEbcuOfKzpUEBC3JkGV">净额</span>
-        <div class="mb-axis" id="yNetAxis" data-page-node-id="Bes8r2zdSCWS1mwP5E6fuG"></div>
-      </div>
-      <div class="mb-line ded" id="mbYearDed" data-page-node-id="a5ASRkMMOjneUlpiEocjzm">
-        <span class="mb-tag" id="mbYearTagDed" data-page-node-id="9OhlE9xySS7QNHX0VLjPTv">扣款</span>
-        <div class="mb-axis" id="yDedAxis" data-page-node-id="f4GJNDYxVfP6oEEb2yzhRT"></div>
-      </div>
-      <div class="mb-foot" id="yearBarFoot" data-page-node-id="391ngB3kvR1cEzRcFN6xl6"></div>
-    </div>
-  </section>
-
- </aside><!-- /.col-side -->
 </main>
 
 <footer data-page-node-id="y6kSisKRvDRQdBwhxl63C0">
@@ -3541,16 +3412,14 @@ body.auth-lock>footer{display:none}
     return wrap;
   }
 
-  /* ---- 统计：「数据统计」已独立成大屏菜单；这里保留月度 / 年度两条窄栏的渲染 ---- */
+  /* ---- 统计：月度 / 年度两条窄栏已整体移除（2026-10-07），
+     汇总看「数据统计」大屏菜单。
+     注意：renderMonthly / renderYearly 必须继续调 —— 它们现在只负责把
+     顶部工具栏「接单月 / 接单年」两个筛选下拉的选项填上（侧栏 KPI / 明细表
+     已随侧栏一起删，函数体里已精简）。漏调会让两个下拉只剩「全部」一项。 ---- */
   function renderStats() {
-    var mbox = document.getElementById('monthSection');
-    if (mbox) mbox.classList.remove('hide');
-    // 两条窄栏各只放一块统计，始终展开，别留空槽
-    var asides = document.querySelectorAll('main > .col-side');
-    Array.prototype.forEach.call(asides, function (a) { a.classList.remove('hide'); });
-
-    renderMonthly(statRows());   // 月度统计跟统计区同一个口径，切阶段也不会变
-    renderYearly(statRows());    // 年度统计同上
+    renderMonthly(statRows());   // 只填「接单月」下拉选项
+    renderYearly(statRows());    // 只填「接单年」下拉选项
     renderManagerSuggest();
   }
 
@@ -4101,18 +3970,6 @@ body.auth-lock>footer{display:none}
     var node = document.querySelector('[data-y="' + key + '"]');
     if (node) node.textContent = value;
   }
-  function renderYearly(rows) {
-    var tot = monthTotals(rows);          // 口径与月度统计完全一致的五个数
-    setYStat('ytotal', String(tot.total));
-    setYStat('yordered', String(tot.ordered));
-    setYStat('ycommission', money(tot.commission));
-    setYStat('ydeduction', money(tot.deduction));
-    setYStat('ynet', money(tot.net));
-    var list = aggregateByYear(rows);
-    renderYearOptions(list);
-    renderYearTable(list);
-    renderYearBars(list);
-  }
   /**
    * 年度柱体：净额一排、扣款一排
    * 口径与月度柱体一致（同一排横着比，各排用自己的高度尺），
@@ -4193,6 +4050,8 @@ body.auth-lock>footer{display:none}
   }
   function renderYearTable(list) {
     var box = $('#yearTable');
+    // 年度统计侧栏已整体移除（2026-10-07），#yearTable 不存在时直接跳过（理由同 renderMonthTable）
+    if (!box) return;
     box.innerHTML = '';
     if (!list.length) {
       var none = el('div', 'm-row');
@@ -4295,17 +4154,17 @@ body.auth-lock>footer{display:none}
       });
     });
   }
+  /**
+   * 月度 / 年度两条统计窄栏已整体移除（2026-10-07）。
+   * 但顶部工具栏的「接单月 / 接单年」两个筛选下拉还留着，选项由 renderMonthOptions /
+   * renderYearOptions 填充 —— 所以这两个函数必须继续调，只把侧栏专属的
+   * KPI 写入（setMStat/setYStat）、明细表、柱状图去掉（它们对空容器已自行跳过）。
+   */
   function renderMonthly(rows) {
-    var tot = monthTotals(rows);
-    setMStat('mtotal', String(tot.total));
-    setMStat('mordered', String(tot.ordered));
-    setMStat('mcommission', money(tot.commission));
-    setMStat('mdeduction', money(tot.deduction));
-    setMStat('mnet', money(tot.net));
-    var list = aggregateByMonth(rows);
-    renderMonthOptions(list);
-    renderMonthTable(list);
-    renderMonthBars(list);
+    renderMonthOptions(aggregateByMonth(rows));
+  }
+  function renderYearly(rows) {
+    renderYearOptions(aggregateByYear(rows));
   }
   function renderMonthOptions(list) {
     var sel = $('#monthSel');
@@ -4358,6 +4217,9 @@ body.auth-lock>footer{display:none}
   }
   function renderMonthTable(list) {
     var box = $('#monthTable');
+    // 月度统计侧栏已整体移除（2026-10-07），#monthTable 不存在时直接跳过。
+    // 保留这套渲染逻辑是为了将来想恢复侧栏时能直接用，不必重写。
+    if (!box) return;
     box.innerHTML = '';
     if (!list.length) {
       var none = el('div', 'm-row');
@@ -4923,36 +4785,6 @@ body.auth-lock>footer{display:none}
       refreshAll();
     });
 
-    // 年度表格行 → 只看那一年
-    $('#yearTable').addEventListener('click', function (e) {
-      var g = closest(e.target, 'data-ystat');
-      if (!g) return;
-      yearFocus(g.getAttribute('data-ystat'));
-    });
-
-    // 年度柱体 → 点柱子的年份脚注等于只看那一年（两排一起高亮）
-    $('#yearBars').addEventListener('click', function (e) {
-      var g = closest(e.target, 'data-ybar') || closest(e.target, 'data-ybarf');
-      if (!g) return;
-      yearFocus(g.getAttribute('data-ybar') || g.getAttribute('data-ybarf'));
-    });
-
-    // 月度表格行 → 只看那个月
-    $('#monthTable').addEventListener('click', function (e) {
-      var g = closest(e.target, 'data-mstat');
-      if (!g) return;
-      monthFocus(g.getAttribute('data-mstat'));
-    });
-
-    // 月度柱体 → 点净额排 / 扣款排的柱子、点月份脚注，都等于只看那个月（两排一起高亮）
-    $('#monthBars').addEventListener('click', function (e) {
-      // 脚注里的年份标签 → 只看那一年的月份（横轴就只剩那一段）
-      var y = closest(e.target, 'data-myear');
-      if (y) { yearFocus(y.getAttribute('data-myear')); return; }
-      var g = closest(e.target, 'data-mbar') || closest(e.target, 'data-mbarf');
-      if (!g) return;
-      monthFocus(g.getAttribute('data-mbar') || g.getAttribute('data-mbarf'));
-    });
 
     // 接单年下拉 → 跟着筛选
     $('#yearSel').addEventListener('change', function () {
