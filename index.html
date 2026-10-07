@@ -1017,6 +1017,17 @@ body.auth-lock>footer{display:none}
   border-radius:9px;padding:7px 10px;display:block;
 }
 .auth.relogin #authTip:empty{display:none}
+
+/* ---------- 第十七轮：数据统计大屏收窄（宽屏下铺太满，卡片摊得太开）---------- */
+/* 原来 .dash 跟顶栏/主区一样是 max-width:1640px，在 1200px 以上的屏幕上几乎贴满左右边缘，
+   KPI 卡和图表被拉得很宽，看着空、也不美观。这里单独把大屏收到 1024px 居中。
+   注意：只动大屏（.dash），不碰 header.top / main / footer / .pagemenu —— 那几处保持 1640px，
+   订单页布局不受影响。 */
+.dash{max-width:1024px;margin-left:auto;margin-right:auto}
+@media (max-width:1023px){
+  /* 屏幕本身不到 1024px 时，别留多余边距，照旧铺满可用宽度 */
+  .dash{max-width:none}
+}
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
