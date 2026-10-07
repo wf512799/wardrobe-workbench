@@ -944,7 +944,11 @@ body.auth-lock>footer{display:none}
 
 /* ---- 5. 趋势折线（面积图）---- */
 .dash-chart{width:100%;overflow:hidden}
-.dash-chart svg{width:100%;height:auto;display:block}
+/* SVG 用 viewBox 0 0 820 260 + width:100%，在宽容器里会等比放大到很高
+   （1020px 宽 → 约 323px 高），数据少时看着又高又空。
+   这里给一个高度上限，超出就不再长高。 */
+.dash-chart svg{width:100%;height:auto;display:block;max-height:240px}
+@media (max-width:560px){ .dash-chart svg{max-height:190px} }
 .dash-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px}
 .dash-legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--d-dim);font-weight:600}
 .dash-legend i{width:9px;height:9px;border-radius:3px;flex:none}
