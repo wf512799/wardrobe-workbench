@@ -736,6 +736,102 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
 .dm-list .op:hover{color:var(--pri);border-color:var(--pri)}
 .dm-list .op.warn:hover{color:var(--danger);border-color:var(--danger);background:var(--danger-l)}
 
+/* =====================================================================
+   第十四轮：顶部工具栏「网站后台」风
+   —— 只改样式，不动 DOM：搜索框 / 接单年 / 接单月 / 排序 / 重置 结构原样，
+      改成后台管理台里那种「一整条筛选面板 + 统一控件身材」的排版。
+   ===================================================================== */
+
+/* 1) 工具条：收纳成一整块筛选面板（搜索在左、筛选居中、重置靠右） */
+.tools{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  background:linear-gradient(180deg,#F9F6F1 0%,#F4F0E9 100%);
+  border:1px solid rgba(60,42,26,.10);border-radius:var(--r-3);
+  padding:9px 10px;margin-bottom:10px;
+  box-shadow:inset 0 1px 0 #FFFFFF, 0 1px 2px rgba(58,42,26,.03);
+}
+
+/* 2) 控件统一身材：同高 36 / 同圆角 9 / 同一套描边，像后台表单控件 */
+.search,.sel{
+  min-height:36px;border-radius:9px;
+  background:#FFFFFF;border:1px solid var(--line-2);box-shadow:none;
+}
+.search{flex:1 1 230px;padding:0 11px;gap:8px}
+.search svg{width:15px;height:15px;stroke:var(--ink-3)}
+.search input{min-height:34px;font-size:14px}
+.search input::placeholder{color:#A69C8E}
+.search:hover,.sel:hover{border-color:rgba(180,118,58,.30)}
+.search:focus-within,.sel:focus-within{border-color:var(--pri);box-shadow:var(--ring)}
+
+/* 3) 三个下拉：标签做成小号字段名，值用中黑体，跟后台表单一致 */
+.sel{padding:0 8px 0 10px;gap:6px}
+.sel > span{
+  font-size:11.5px;font-weight:600;color:var(--ink-3);
+  letter-spacing:.3px;white-space:nowrap;
+}
+.sel select{
+  min-height:34px;font-size:13.5px;font-weight:600;color:var(--ink);
+  max-width:120px;padding-right:2px;
+}
+
+/* 4) 重置筛选：后台工具条右侧的动作位 */
+.tools .btn.reset{margin-left:auto}
+.tools .btn.sm{min-height:36px;border-radius:9px;padding:0 14px;font-size:13px;font-weight:600}
+
+/* 5) 条件胶囊：从「大圆泡」收成后台里的小标签（弱化、更克制） */
+.chips{gap:6px;margin-bottom:9px}
+.chips .c-label{font-size:11.5px;font-weight:600;color:var(--ink-3);letter-spacing:.3px}
+.chip{
+  background:#FFFFFF;border:1px solid var(--line-2);color:var(--ink-2);
+  border-radius:7px;padding:3px 5px 3px 9px;font-size:12px;font-weight:600;
+  box-shadow:0 1px 1px rgba(58,42,26,.03);
+}
+.chip b{color:var(--pri-d)}
+.chip .x{width:18px;height:18px;border-radius:5px;color:var(--ink-3)}
+.chip .x:hover{background:#F3EDE4;color:var(--danger)}
+
+/* 6) 阶段筛选：改成后台导航条 —— 整行一条底线，选中项用底部色条，不再是悬浮圆泡 */
+.tabs{
+  gap:2px;padding:0 0 2px;align-items:flex-end;
+  border-bottom:1px solid rgba(60,42,26,.12);margin-bottom:12px;
+}
+.tab{
+  flex:none;min-height:36px;padding:0 12px;
+  border:none;border-bottom:2px solid transparent;border-radius:8px 8px 0 0;
+  background:transparent;box-shadow:none;transform:none;
+  color:var(--ink-3);font-size:13.5px;font-weight:600;
+}
+.tab:hover{
+  background:#F7F2EA;border-bottom-color:rgba(180,118,58,.28);
+  transform:none;box-shadow:none;
+}
+.tab.on,.tab.on:hover{
+  background:transparent;border-bottom-color:var(--pri);
+  color:var(--pri-d);font-weight:700;box-shadow:none;transform:none;
+}
+/* 数字改成小号计数徽标，更像后台 tab 上的角标 */
+.tab .n{
+  font-size:11px;font-weight:700;color:var(--ink-3);
+  background:#EDE7DD;border-radius:999px;padding:1px 7px;margin-left:1px;
+}
+.tab.on .n{color:var(--pri-d);background:#F1E2CD}
+.tab.on .pip{box-shadow:none}
+.tab.hit{outline:none;background:#FBF3E7}
+.tab-pre{border-style:none;border-left:none;background:transparent;margin-left:8px}
+.tab-pre:hover{border-bottom-color:rgba(180,118,58,.28)}
+.tab-pre.on{background:transparent;border-bottom-color:var(--pri)}
+
+/* 7) 小屏：工具条内控件自适应，重置按钮独占一行，不挤成一条 */
+@media (max-width:640px){
+  .tools{padding:8px}
+  .search{flex:1 1 100%}
+  .sel{flex:1 1 calc(50% - 4px);min-width:0}
+  .sel select{max-width:none;flex:1;width:100%}
+  .tools .btn.reset{flex:1 1 100%;margin-left:0;justify-content:center}
+  .tabs{gap:0}
+  .tab{padding:0 10px;font-size:13px}
+}
+
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
