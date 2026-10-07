@@ -1117,6 +1117,23 @@ footer,
   .card:has(> #stageTabs) .tab .n{margin-left:1px}
   .card:has(> #stageTabs) .tab-pre{margin-left:8px;margin-top:0}
 }
+
+/* ---------- 第二十一轮：页面菜单条（订单跟进 / 数据统计）真正吸顶 ---------- */
+/* 用户报「下拉时红框里的菜单要固定住」。实测发现它本来就是 position:sticky，
+   但 top 用的是 var(--top-h, 56px)，而 --top-h 从没被写进去过（登录门阶段顶栏
+   display:none，syncMenuOffset 量到 0 就不写值），于是回退成写死的 56px；
+   顶栏真实高度却是 121px（宽屏）/ 167~171px（窄屏）—— 菜单吸到了顶栏底下被盖住，
+   看起来就像「跟着滚走了」。
+   修法（两手抓）：
+     ① JS：syncMenuOffset 改到「登录成功后 + resize + ResizeObserver」都重算（主修复）。
+     ② CSS：这里给一份按断点的兜底值，保证即使 JS 出意外也能吸在合理位置，
+        而不是掉到 56px 那个明显偏小的值上。
+   注意 --top-h 由 JS 实测后写在 :root 的内联样式上，内联优先级高于这里的规则，
+   所以正常情况下以 JS 实测值为准，这几条只在 JS 没跑起来时兜底。 */
+:root{--top-h:121px}                     /* 宽屏顶栏单行高（实测 ~121px） */
+@media (max-width:1023px){ :root{--top-h:167px} }   /* 顶栏换行后（实测 ~167~171px） */
+/* 菜单必须盖在顶栏「下面」而不是钻进它底下：顶栏 z-index 更高，菜单贴其下沿 */
+.pagemenu{top:var(--top-h,121px)}
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
@@ -2642,6 +2659,9 @@ footer,
     var g = $('#authGate'); if (g) g.classList.remove('relogin');
     applySession(sess);
     startApp();
+    // 登录成功：顶栏此刻才真正显示出来（登录门阶段是 display:none，高度量不到），
+    // 必须在这里重新量一次顶栏高度，否则菜单吸顶会一直用错的偏移值。
+    watchMenuOffset();
     // 关键：这里【绝不】回推账号表。本机可能是旧数据/别的设备，回推会把云端正确
     // 的密码哈希覆盖掉 —— 那正是「第一次能登、退出后再也登不上」的元凶。
     toast('登录成功，账号已与云端连通');
@@ -5085,12 +5105,33 @@ footer,
   /**
    * 页面菜单要吸在顶栏正下方。顶栏在窄屏会换行、高度不固定，
    * 所以不用写死的 top 值，实测顶栏高度后写到 --top-h 上给 .pagemenu 用。
+   *
+   * ⚠️ 2026-10-07 修 bug：这个函数原来只在 init() 里调一次，而那一刻登录门还开着
+   *   （body.auth-lock 下 header.top 是 display:none），实测高度恒为 0，
+   *   `if (h > 0)` 不成立 → --top-h 永远写不进去 → .pagemenu 只能用 CSS 里写死的
+   *   回退值 56px；而顶栏真实高度是 121~171px。结果是滚动时菜单「吸」到了 56px，
+   *   直接钻到顶栏底下被盖住 65~115px —— 用户看到的就是「菜单跟着滚走了」。
+   * 现在改成：登录成功后、resize、以及顶栏自身尺寸变化时都重新量；
+   * 并且 header.top 是 display:none 时（高度 0）不写值，避免把好值覆盖成 0。
    */
   function syncMenuOffset() {
     var top = document.querySelector('header.top');
     if (!top) return;
+    // display:none / 登录门阶段：高度 0，此时绝不能写进 --top-h（会把已有值覆盖坏）
     var h = Math.round(top.getBoundingClientRect().height);
     if (h > 0) document.documentElement.style.setProperty('--top-h', h + 'px');
+  }
+  /** 顶栏高度会随内容（用户名长短、按钮换行）变化，用 ResizeObserver 盯着，
+      一旦变了就重算菜单偏移 —— 只靠 resize 事件盖不住「登录后顶栏内容变多」这种变化。 */
+  function watchMenuOffset() {
+    syncMenuOffset();
+    var top = document.querySelector('header.top');
+    if (top && typeof ResizeObserver !== 'undefined') {
+      try {
+        var ro = new ResizeObserver(function () { syncMenuOffset(); });
+        ro.observe(top);
+      } catch (e) {}
+    }
   }
 
   /* ---------------- 启动 ---------------- */
@@ -5137,7 +5178,7 @@ footer,
     restoreTitle();
     syncScopeUI();            // 「跟随筛选 / 全部数据」两个按钮的初始高亮
     switchView('orders');     // 每次打开都先落在「订单跟进」，大屏藏在菜单后面
-    syncMenuOffset();         // 菜单吸顶要贴着顶栏下沿，顶栏多高就往下让多少
+    watchMenuOffset();        // 菜单吸顶要贴着顶栏下沿；含 ResizeObserver 持续跟随顶栏高度
     window.addEventListener('resize', syncMenuOffset);
     bind($('#todayLabel')).textContent = '今天 ' + prettyDate(todayISO()) + ' · 数据加载中…';
     setSync(HAS_DB ? 'syncing' : 'local');
