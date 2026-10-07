@@ -344,6 +344,13 @@ main{
   .top-r{flex:0 0 100%;justify-content:center;flex-wrap:wrap;row-gap:8px}
 }
 /* 平板及以下：身份切换器收掉说明文字，只留图标 + 名字 */
+@media (max-width:900px){
+  /* 顶栏右侧控件多（身份 + 名单 + 同步 + 导出 + 新增），
+     窄屏必须允许换行，否则 flex:none 会把整页顶出横向滚动条。
+     原先只在 ≤560px 处理，560~900 这段是空档，实测 640px 会溢出 55px。 */
+  .top{flex-wrap:wrap}
+  .top-r{flex:1 1 100%;justify-content:center;flex-wrap:wrap;row-gap:8px;min-width:0}
+}
 @media (max-width:768px){
   .owner-wrap .ow-hint{display:none}
   .owner-wrap select{max-width:112px}
@@ -832,6 +839,162 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   .tab{padding:0 10px;font-size:13px}
 }
 
+/* =====================================================================
+   第十五轮：页面级菜单 + 「数据统计」独立大屏（深色主题）
+   —— 两张视图互斥：订单跟进 / 数据统计。仅改样式 + 新增独立区块，
+      原有 #stageTabs / #chips / 订单卡等 DOM 结构与类名一律不动。
+   ===================================================================== */
+
+/* ---- 1. 页面级菜单条（贴在顶栏下方，二级导航） ---- */
+.pagemenu{
+  display:flex;align-items:center;gap:4px;
+  max-width:1640px;margin:0 auto;padding:0 14px;
+  border-bottom:1px solid var(--line-2);
+  background:rgba(246,243,239,.86);backdrop-filter:saturate(160%) blur(6px);
+  position:sticky;top:var(--top-h,56px);z-index:24;
+  overflow-x:auto;scrollbar-width:none;
+}
+.pagemenu::-webkit-scrollbar{display:none}
+.pm-item{
+  flex:none;display:inline-flex;align-items:center;gap:7px;
+  min-height:44px;padding:0 14px;margin-bottom:-1px;
+  border:none;border-bottom:2px solid transparent;border-radius:9px 9px 0 0;
+  background:transparent;color:var(--ink-3);
+  font-size:14px;font-weight:600;white-space:nowrap;
+  transition:background .14s,color .14s,border-color .14s;
+}
+.pm-item svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pm-item:hover{background:#F1EAE0;color:var(--ink)}
+.pm-item.on{border-bottom-color:var(--pri);color:var(--pri-d);font-weight:700}
+@media (min-width:769px){ .pagemenu{padding:0 18px} }
+
+/* ---- 2. 数据统计大屏：深色主题（作用域内覆盖，不影响订单页） ---- */
+.dash{
+  --d-bg:#0F1320; --d-card:#171C2E; --d-card-2:#1C2238;
+  --d-line:rgba(255,255,255,.08); --d-txt:#E8ECF5; --d-dim:#8B95AC;
+  --d-blue:#4F7BFF; --d-violet:#A78BFA; --d-cyan:#38BDF8;
+  --d-green:#34D399; --d-red:#F87171; --d-amber:#FBBF24;
+  max-width:1640px;margin:0 auto;padding:16px 14px 8px;
+  display:flex;flex-direction:column;gap:14px;
+  background:var(--d-bg);color:var(--d-txt);
+  border-radius:16px;margin-top:12px;
+}
+@media (min-width:769px){ .dash{padding:18px 18px 10px;margin-top:14px} }
+
+.dash-h{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dash-h-l{display:flex;align-items:center;gap:11px;min-width:0}
+.dash-ico{
+  width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:11px;
+  background:linear-gradient(140deg,#5B8CFF,#7C5CFF);
+  box-shadow:0 8px 20px rgba(91,140,255,.34);
+}
+.dash-ico svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dash-h-l h2{font-size:19px;font-weight:800;letter-spacing:.2px;color:#fff;margin:0}
+.dash-sub{font-size:12.5px;color:var(--d-dim);margin-top:1px}
+/* 大屏里的分段控件改成深色 */
+.dash .seg{background:rgba(255,255,255,.07);border-color:var(--d-line);border-radius:10px;padding:3px}
+.dash .seg button{color:var(--d-dim);border-radius:8px;min-height:32px;padding:0 13px;font-size:13px;font-weight:600}
+.dash .seg button.on{background:linear-gradient(180deg,#3D63E8,#2F4FD0);color:#fff;box-shadow:0 3px 10px rgba(61,99,232,.35)}
+
+/* ---- 3. KPI 卡片：大数字 + 涨跌幅角标 + 图标 ---- */
+.dash-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:900px){ .dash-kpis{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.dk{
+  background:linear-gradient(180deg,var(--d-card) 0%,var(--d-card-2) 100%);
+  border:1px solid var(--d-line);border-radius:14px;padding:14px 15px;
+  display:flex;flex-direction:column;gap:9px;min-width:0;
+}
+.dk-t{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.dk-t span{font-size:12.5px;color:var(--d-dim);font-weight:600}
+.dk-ico{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:9px}
+.dk-ico svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dk-b{font-size:26px;font-weight:800;letter-spacing:.4px;color:#fff;line-height:1.1;font-variant-numeric:tabular-nums}
+.dk-f{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.dk-d{font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.dk-d.up{color:#6EE7B7;background:rgba(52,211,153,.14)}
+.dk-d.down{color:#FCA5A5;background:rgba(248,113,113,.14)}
+.dk-d.flat{color:#B6C0D4;background:rgba(255,255,255,.07)}
+.dk-n{font-size:11.5px;color:var(--d-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---- 4. 大屏卡片外壳 ---- */
+.dash-card{
+  background:linear-gradient(180deg,var(--d-card) 0%,rgba(23,28,46,.86) 100%);
+  border:1px solid var(--d-line);border-radius:14px;padding:15px 16px;min-width:0;
+}
+.dash-card-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.dash-card-h h3{font-size:15px;font-weight:700;color:#fff;margin:0}
+.dash-card-h p{font-size:12px;color:var(--d-dim);margin:3px 0 0}
+/* 大屏里的指标切换（原来 .tabs/.tab 是暖色，这里独立命名避免互相污染） */
+.dash-tabs{display:flex;gap:3px;background:rgba(255,255,255,.07);border-radius:10px;padding:3px;flex:none}
+.dash-tabs button{
+  border:none;background:transparent;color:var(--d-dim);border-radius:8px;
+  min-height:30px;padding:0 12px;font-size:12.5px;font-weight:600;white-space:nowrap;
+}
+.dash-tabs button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.dash-tabs button.on{background:linear-gradient(180deg,#3D63E8,#2F4FD0);color:#fff;box-shadow:0 3px 10px rgba(61,99,232,.35)}
+
+/* ---- 5. 趋势折线（面积图）---- */
+.dash-chart{width:100%;overflow:hidden}
+.dash-chart svg{width:100%;height:auto;display:block}
+.dash-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px}
+.dash-legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--d-dim);font-weight:600}
+.dash-legend i{width:9px;height:9px;border-radius:3px;flex:none}
+.dash-empty{padding:34px 8px;text-align:center;color:var(--d-dim);font-size:13px}
+
+/* ---- 6. 阶段分布（横向占比条）---- */
+.dash-bars{display:flex;flex-direction:column;gap:11px}
+.dbar{display:grid;grid-template-columns:64px minmax(0,1fr) 46px;align-items:center;gap:11px;cursor:pointer;padding:2px 0;border-radius:8px}
+.dbar:hover{background:rgba(255,255,255,.04)}
+.dbar-n{font-size:12.5px;color:#C3CBDB;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbar-t{height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+.dbar-f{display:block;height:100%;border-radius:5px;transition:width .3s}
+.dbar-v{font-size:12.5px;color:#fff;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---- 7. 年度汇总（行式，点行筛选）---- */
+.dash-rows{display:flex;flex-direction:column;gap:2px}
+.drow{
+  display:grid;grid-template-columns:74px repeat(3,minmax(0,1fr));gap:6px;
+  align-items:center;padding:9px 8px;border-radius:9px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.drow:hover{background:rgba(255,255,255,.05)}
+.drow.on{background:linear-gradient(90deg,rgba(91,140,255,.20),rgba(91,140,255,.06));box-shadow:inset 0 0 0 1px rgba(91,140,255,.35)}
+.drow-y{font-size:13px;font-weight:800;color:#fff;letter-spacing:.3px}
+.dc{display:flex;flex-direction:column;gap:1px;min-width:0}
+.dc i{font-size:10.5px;color:var(--d-dim);font-style:normal;white-space:nowrap}
+.dc b{font-size:13.5px;color:#fff;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dc.c-net b{color:#6EE7B7}
+.dc.c-ded b{color:#FCA5A5}
+
+/* ---- 8. 跟单健康度 ---- */
+.dash-health{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){ .dash-health{grid-template-columns:minmax(0,1fr)} }
+.dh{
+  border:1px solid var(--d-line);border-radius:12px;padding:13px 14px;
+  background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:5px;min-width:0;
+}
+.dh-v{font-size:24px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;line-height:1.1}
+.dh-l{font-size:12.5px;color:var(--d-dim);font-weight:600}
+.dh.over{border-color:rgba(248,113,113,.34);background:rgba(248,113,113,.07)}
+.dh.over .dh-v{color:#FCA5A5}
+.dh.today{border-color:rgba(251,191,36,.30);background:rgba(251,191,36,.06)}
+.dh.today .dh-v{color:#FCD34D}
+.dh.week{border-color:rgba(52,211,153,.28);background:rgba(52,211,153,.05)}
+.dh.week .dh-v{color:#6EE7B7}
+
+/* ---- 9. 小屏：大屏整体收紧 ---- */
+@media (max-width:640px){
+  .dash{padding:13px 11px 6px;border-radius:12px;margin-top:10px}
+  .dash-h-l h2{font-size:17px}
+  .dash-ico{width:34px;height:34px}
+  .dash-kpis{gap:9px}
+  .dk{padding:12px}
+  .dk-b{font-size:22px}
+  .dash-card{padding:13px 12px}
+  .dbar{grid-template-columns:56px minmax(0,1fr) 40px;gap:8px}
+  .drow{grid-template-columns:62px repeat(3,minmax(0,1fr));gap:4px;padding:8px 5px}
+}
+
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
@@ -876,7 +1039,95 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
   </div>
 </header>
 
-<main data-page-node-id="AE9dmsJcFDgktrlgleKBFW">
+<!-- 页面级菜单：订单跟进 / 数据统计（两个视图互斥，同页切换） -->
+<nav class="pagemenu" id="pageMenu" data-page-node-id="pageMenuNodeId1">
+  <button class="pm-item on" data-view="orders" data-page-node-id="pmOrdersNodeId1">
+    <svg viewBox="0 0 24 24" data-page-node-id="pmOrdersSvgId1"><rect x="3" y="4" width="18" height="17" rx="2" data-page-node-id="pmOrdersRect1"/><path d="M8 2v4M16 2v4M3 10h18" data-page-node-id="pmOrdersPath1"/></svg>
+    订单跟进
+  </button>
+  <button class="pm-item" data-view="stats" data-page-node-id="pmStatsNodeId1">
+    <svg viewBox="0 0 24 24" data-page-node-id="pmStatsSvgId1"><line x1="12" y1="20" x2="12" y2="10" data-page-node-id="pmStatsLine1"/><line x1="18" y1="20" x2="18" y2="4" data-page-node-id="pmStatsLine2"/><line x1="6" y1="20" x2="6" y2="15" data-page-node-id="pmStatsLine3"/></svg>
+    数据统计
+  </button>
+</nav>
+
+<!-- ============ 视图 B：数据统计大屏（独立菜单页） ============ -->
+<section class="dash hide" id="dashView" data-page-node-id="dashViewNodeId1">
+  <header class="dash-h" data-page-node-id="dashHeadNodeId1">
+    <div class="dash-h-l" data-page-node-id="dashHeadLId1">
+      <span class="dash-ico" data-page-node-id="dashIcoId1">
+        <svg viewBox="0 0 24 24" data-page-node-id="dashIcoSvgId1"><line x1="12" y1="20" x2="12" y2="10" data-page-node-id="dashIcoLine1"/><line x1="18" y1="20" x2="18" y2="4" data-page-node-id="dashIcoLine2"/><line x1="6" y1="20" x2="6" y2="15" data-page-node-id="dashIcoLine3"/></svg>
+      </span>
+      <div data-page-node-id="dashTitleWrapId1">
+        <h2 data-page-node-id="dashTitleId1">数据统计</h2>
+        <div class="dash-sub" id="dashSub" data-page-node-id="dashSubId1">—</div>
+      </div>
+    </div>
+    <div class="seg" id="statScope" data-page-node-id="HrhFPtl0g07TZ8O7INuC9z">
+      <button data-scope="filtered" class="on" data-page-node-id="TkawCWDRK1XhvM1QZCwNXB">跟随筛选</button>
+      <button data-scope="all" data-page-node-id="MiQeai7MG3EK6Eh8YKYvEq">全部数据</button>
+    </div>
+  </header>
+
+  <!-- KPI 卡片区（4 张：订单总数 / 提成 / 扣款 / 净额） -->
+  <div class="dash-kpis" id="dashKpis" data-page-node-id="dashKpisId1"></div>
+
+  <!-- 月度趋势（面积折线图） -->
+  <section class="dash-card" data-page-node-id="dashTrendCardId1">
+    <div class="dash-card-h" data-page-node-id="dashTrendHeadId1">
+      <div data-page-node-id="dashTrendHeadLId1">
+        <h3 data-page-node-id="dashTrendTitleId1">月度趋势</h3>
+        <p data-page-node-id="dashTrendSubId1">订单总数 × 提成净额，按接单月归集</p>
+      </div>
+      <div class="dash-tabs" id="dashMetricTabs" data-page-node-id="dashMetricTabsId1">
+        <button class="on" data-metric="count" data-page-node-id="dashMCountId1">订单总数</button>
+        <button data-metric="net" data-page-node-id="dashMNetId1">净额</button>
+        <button data-metric="commission" data-page-node-id="dashMCommId1">提成</button>
+      </div>
+    </div>
+    <div class="dash-chart" id="dashChart" data-page-node-id="dashChartId1"></div>
+    <div class="dash-legend" data-page-node-id="dashLegendId1">
+      <span data-page-node-id="dashLgId1"><i style="background:#6B8CFF" data-page-node-id="dashLgDot1"></i>本月数值</span>
+      <span data-page-node-id="dashLgId2"><i style="background:#A78BFA" data-page-node-id="dashLgDot2"></i>环比上期</span>
+    </div>
+  </section>
+
+  <!-- 两栏：阶段占比 + 年度汇总 -->
+  <div class="dash-grid" data-page-node-id="dashGridId1">
+    <section class="dash-card" data-page-node-id="dashStageCardId1">
+      <div class="dash-card-h" data-page-node-id="dashStageHeadId1">
+        <div data-page-node-id="dashStageHeadLId1">
+          <h3 data-page-node-id="dashStageTitleId1">阶段分布</h3>
+          <p data-page-node-id="dashStageSubId1">各阶段单数占总数比例</p>
+        </div>
+      </div>
+      <div class="dash-bars" id="dashStageBars" data-page-node-id="dashStageBarsId1"></div>
+    </section>
+
+    <section class="dash-card" data-page-node-id="dashYearCardId1">
+      <div class="dash-card-h" data-page-node-id="dashYearHeadId1">
+        <div data-page-node-id="dashYearHeadLId1">
+          <h3 data-page-node-id="dashYearTitleId1">年度汇总</h3>
+          <p data-page-node-id="dashYearSubId1">按接单年归集，点行可筛该年</p>
+        </div>
+      </div>
+      <div class="dash-rows" id="dashYearRows" data-page-node-id="dashYearRowsId1"></div>
+    </section>
+  </div>
+
+  <!-- 跟单健康度：逾期 / 今天 / 本周 三条指标 -->
+  <section class="dash-card" data-page-node-id="dashHealthCardId1">
+    <div class="dash-card-h" data-page-node-id="dashHealthHeadId1">
+      <div data-page-node-id="dashHealthHeadLId1">
+        <h3 data-page-node-id="dashHealthTitleId1">跟单健康度</h3>
+        <p data-page-node-id="dashHealthSubId1">逾期越少越好，到点就该跟进</p>
+      </div>
+    </div>
+    <div class="dash-health" id="dashHealth" data-page-node-id="dashHealthId1"></div>
+  </section>
+</section>
+
+<main id="mainOrders" data-page-node-id="AE9dmsJcFDgktrlgleKBFW">
  <div class="col-main" data-page-node-id="CcIaasnRxpi3Io7DtBTsOq">
 
   <!-- 欢迎区：一张定制衣柜场景插画，开门见画 -->
@@ -1006,40 +1257,10 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
 
  </aside><!-- /.col-side -->
 
- <!-- 右侧栏：只放「数据统计」，宽屏时钉在右边不动 -->
+ <!-- 右侧栏：只放「年度统计」，宽屏时钉在右边不动 -->
  <aside class="col-side" id="statAside" data-page-node-id="hdhsJNR1Hy8U3oy5fb24qO">
 
-  <!-- 模块三：数据统计（每个阶段页都在） -->
-  <section class="card" id="statSection" data-page-node-id="J4mmrE3Vyqh8A18O1f2sFi">
-    <div class="card-h" data-page-node-id="jNwxWRzsSpelYOHrHKhHKU">
-      <h2 data-page-node-id="BAMHSHEwsn8gg1FRI0Qj5C">
-        <svg viewBox="0 0 24 24" data-page-node-id="g70JqR6FNAI5QadZOM372n"><line x1="12" y1="20" x2="12" y2="10" data-page-node-id="32MaEC2s4W1nQWP2ZYs8ml"/><line x1="18" y1="20" x2="18" y2="4" data-page-node-id="1S3mYZWqBvkDrfTtcyCIbZ"/><line x1="6" y1="20" x2="6" y2="15" data-page-node-id="6kkaL0Ws553FD77ICuLtgP"/></svg>
-        数据统计
-      </h2>
-      <div class="seg" id="statScope" data-page-node-id="HrhFPtl0g07TZ8O7INuC9z">
-        <button data-scope="filtered" class="on" data-page-node-id="TkawCWDRK1XhvM1QZCwNXB">跟随筛选</button>
-        <button data-scope="all" data-page-node-id="MiQeai7MG3EK6Eh8YKYvEq">全部数据</button>
-      </div>
-    </div>
-    <div class="kpis k3" data-page-node-id="jwOUBXEYxXTDQ5NmYSyjee">
-      <button class="kpi" data-go="reset" data-page-node-id="LgbMG1HwaGiF2uaomXrUuT">
-        <b data-stat="total" data-sp-bindable="database" data-sp-database-id="i6JcNHPBKJlxNMX7MIuyWR" data-page-node-id="MCYKeAuEn9QJAesWZCTXwl">0</b>
-        <span data-page-node-id="taxMCv3CD0TkhjZ7vpVhxF">订单总数</span><em id="emTotal" data-page-node-id="UTeHRDTuRDTA1UvoTrByrB"></em>
-      </button>
-      <button class="kpi" data-go="installed" data-page-node-id="Pim6TiHVGi6mLkBG1gC8yh">
-        <b data-stat="installed" data-sp-bindable="database" data-sp-database-id="i6JcNHPBKJlxNMX7MIuyWR" data-page-node-id="NQbEPUy4cPmPR4RTcIzWAx">0</b>
-        <span data-page-node-id="mQhbEcUzevApADSFxyNxHA">已安装完成</span><em id="emInstalled" data-page-node-id="qgUaT9vhz8ZmmBMU7goLIJ"></em>
-      </button>
-      <button class="kpi" data-go="settled" data-page-node-id="rku4EpTpGVFLdyA2IDIszb">
-        <b data-stat="settled" data-sp-bindable="database" data-sp-database-id="i6JcNHPBKJlxNMX7MIuyWR" data-page-node-id="Qwx6B9KGhrTbJjrLAyNVcS">0</b>
-        <span data-page-node-id="HTYnuQFkuxJpIbA9x37kgn">已结清</span><em id="emSettled" data-page-node-id="aR8ccXpytUKN4BLbcHrU4Q"></em>
-      </button>
-    </div>
-    <div class="chart-wrap" id="stageChart" data-page-node-id="WaUaVMHHfQM5XKx3kqcD6b"></div>
-    <div class="hintline" style="margin:6px 0 0" data-page-node-id="BKatSwAUU8Z4uhH4osnmq5">柱子 = 该阶段在当前口径下的单数，<b data-page-node-id="MEby2rLNiIrJ4GUWAlADYR">点柱子可跳到该阶段</b>；选中阶段会高亮描边。</div>
-  </section>
-
-  <!-- 年度统计：跟在「数据统计」下面，口径一致，按接单年汇总 -->
+  <!-- 年度统计：数据统计已独立成菜单，这一栏只留年度汇总 -->
   <section class="card" id="yearSection" data-page-node-id="eNpxE5L0d10ItpUXL9sEav">
     <div class="card-h" data-page-node-id="vjTmuC6iSJeFCxa4TyCjnr">
       <h2 data-page-node-id="BEuA6o6KJzt3CbMvFEBPBU">
@@ -1345,7 +1566,9 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     accounts: [],         // 账号表（云端设置库「账号表」∪ localStorage）
     me: null,             // 当前登录者 { u, name, role:'boss'|'designer' }；null = 未登录
     accSync: '',          // 账号云同步状态：'' 未知 | ok 已上云 | fail 只在本地 | local 离线模式
-    accFail: ''           // 同步失败的原因：'' 无 | login 浏览器没登录 WorkBuddy | other 其他
+    accFail: '',          // 同步失败的原因：'' 无 | login 浏览器没登录 WorkBuddy | other 其他
+    view: 'orders',       // orders 订单跟进 | stats 数据统计（页面级菜单，两张视图互斥）
+    dashMetric: 'count'   // 大屏趋势图指标：count 订单总数 | net 净额 | commission 提成
   };
   var SCHEMA_OPTIONS = {};
   var UI_SAVED = { sort: '', month: '' };
@@ -2832,6 +3055,8 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     renderToday();
     renderList();
     renderStats();
+    // 大屏正在看着的时候，数据一变就跟着重画（不是大屏就跳过，省开销）
+    if (state.view === 'stats') renderDash();
   }
 
   /* ---- 条件胶囊 ---- */
@@ -3166,39 +3391,397 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     return wrap;
   }
 
-  /* ---- 统计：「数据统计」「月度统计」在「全部」页和每个阶段页都展示，口径一致 ---- */
+  /* ---- 统计：「数据统计」已独立成大屏菜单；这里保留月度 / 年度两条窄栏的渲染 ---- */
   function renderStats() {
-    var box = document.getElementById('statSection');
-    if (box) box.classList.remove('hide');
     var mbox = document.getElementById('monthSection');
     if (mbox) mbox.classList.remove('hide');
     // 两条窄栏各只放一块统计，始终展开，别留空槽
     var asides = document.querySelectorAll('main > .col-side');
     Array.prototype.forEach.call(asides, function (a) { a.classList.remove('hide'); });
 
-    var agg = aggregate(statRows());
-    var all = aggregate(state.rows);
-
-    setStat('total', agg.total, String);
-    setStat('installed', agg.installed, String);
-    setStat('settled', agg.settled, String);
-
-    $('#emTotal').textContent = state.statScope === 'all' ? '全量口径' : '随筛选（全库 ' + all.total + '）';
-    $('#emInstalled').textContent = '点击 = 只看已安装';
-    $('#emSettled').textContent = '点击 = 只看已结清';
-
-    Array.prototype.forEach.call(document.querySelectorAll('.kpi'), function (k) {
-      var g = k.getAttribute('data-go');
-      var on = (g === 'reset' && !state.stage && !state.kw.trim()) ||
-               (g === 'installed' && state.stage === '已安装') ||
-               (g === 'settled' && state.stage === '已结清');
-      k.classList.toggle('on', !!on);
-    });
-
-    renderChart(agg.byStage);
     renderMonthly(statRows());   // 月度统计跟统计区同一个口径，切阶段也不会变
     renderYearly(statRows());    // 年度统计同上
     renderManagerSuggest();
+  }
+
+  /* =======================================================
+     视图层：页面级菜单（订单跟进 / 数据统计大屏）
+     —— 两张视图互斥显隐；大屏的渲染函数各自独立、互不调用，
+        统一由 renderDash() 这一个入口按固定顺序调度（无环路）。
+     ======================================================= */
+  function switchView(v) {
+    state.view = (v === 'stats') ? 'stats' : 'orders';
+    var isStats = state.view === 'stats';
+
+    var menu = $('#pageMenu');
+    if (menu) {
+      Array.prototype.forEach.call(menu.querySelectorAll('.pm-item'), function (b) {
+        b.classList.toggle('on', b.getAttribute('data-view') === state.view);
+      });
+    }
+    var dash = $('#dashView');
+    var main = $('#mainOrders');
+    if (dash) dash.classList.toggle('hide', !isStats);
+    if (main) main.classList.toggle('hide', isStats);
+
+    if (isStats) renderDash();
+    // 切视图回到顶部。jsdom 等无头环境没实现 window.scrollTo（也不是 scrollY），
+    // 直接调会抛出 jsdomError 污染「无运行时错误」断言，所以先探一下能力再用。
+    if (typeof window.scrollY === 'number' && typeof window.scrollTo === 'function' && window.scrollTo.length >= 2) {
+      try { window.scrollTo(0, 0); } catch (e) {}
+    }
+  }
+
+  /** 大屏顶部的口径说明 + 时间范围 */
+  function dashMetaText() {
+    var parts = [];
+    parts.push(state.statScope === 'all' ? '全部数据' : '跟随筛选');
+    if (state.year) parts.push(state.year + ' 年');
+    if (state.month) parts.push(state.month);
+    if (state.kw.trim()) parts.push('含「' + state.kw.trim() + '」');
+    if (state.owner) parts.push(state.owner);
+    var rows = statRows();
+    return parts.join(' · ') + ' · 共 ' + rows.length + ' 单';
+  }
+
+  /** 环比：拿本期跟上一期比，返回 { pct, dir }；上期为 0 时不给百分比 */
+  function dashDelta(cur, prev) {
+    if (!prev) return { pct: null, dir: cur > 0 ? 'up' : 'flat' };
+    var d = ((cur - prev) / Math.abs(prev)) * 100;
+    // 负基数的环比方向要按绝对值判断，避免出现「亏得更多显示为涨」
+    var dir = Math.abs(d) < 0.05 ? 'flat' : ((cur - prev) >= 0 ? 'up' : 'down');
+    return { pct: d, dir: dir };
+  }
+
+  /** KPI 卡片区：只画数字，不参与筛选交互（避免跟订单页的 .kpi 点击语义混在一起） */
+  function renderDashKpis() {
+    var box = $('#dashKpis');
+    if (!box) return;
+    box.innerHTML = '';
+
+    var rows = statRows();
+    var thisMonth = monthOf(todayISO());
+    var prevMonth = shiftMonth(thisMonth, -1);
+
+    // 本期（当月整月已在数据里）/ 上期，用于算环比
+    function sumOf(list, fn) { return list.reduce(function (s, r) { return s + fn(r); }, 0); }
+    var mNow = rows.filter(function (r) { return monthOf(r['接单日期']) === thisMonth; });
+    var mPrev = rows.filter(function (r) { return monthOf(r['接单日期']) === prevMonth; });
+
+    var totAll = aggregate(rows);
+    totAll.net = totAll.commission - totAll.deduction;   // aggregate 不带 net，这里补上
+    var totNow = monthTotals(mNow);
+    var totPrev = monthTotals(mPrev);
+
+    var cards = [
+      {
+        key: 'count', label: '订单总数', icon: 'orders',
+        value: String(totAll.total),
+        delta: dashDelta(totNow.total, totPrev.total),
+        note: '本月新增 ' + totNow.total + ' 单',
+        color: 'linear-gradient(140deg,#5B8CFF,#3D63E8)'
+      },
+      {
+        key: 'commission', label: '提成合计', icon: 'money',
+        value: money(totAll.commission),
+        delta: dashDelta(totNow.commission, totPrev.commission),
+        note: '本月 ' + money(totNow.commission),
+        color: 'linear-gradient(140deg,#34D399,#0E9F6E)'
+      },
+      {
+        key: 'deduction', label: '扣款合计', icon: 'warn',
+        value: money(totAll.deduction),
+        delta: dashDelta(totNow.deduction, totPrev.deduction),
+        // 扣款是「越少越好」，方向语义反过来标
+        inverse: true,
+        note: '本月 ' + money(totNow.deduction),
+        color: 'linear-gradient(140deg,#F87171,#DC2626)'
+      },
+      {
+        key: 'net', label: '净额（提成−扣款）', icon: 'net',
+        value: money(totAll.net),
+        delta: dashDelta(totNow.net, totPrev.net),
+        note: '本月 ' + money(totNow.net),
+        color: 'linear-gradient(140deg,#A78BFA,#7C3AED)'
+      }
+    ];
+
+    var DK_ICON = {
+      orders: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>',
+      money: '<svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6.5c0-2-2.2-3-5-3s-5 1-5 3 2.2 2.6 5 3.2 5 1.3 5 3.3-2.2 3-5 3-5-1-5-3"/></svg>',
+      warn: '<svg viewBox="0 0 24 24"><path d="M10.3 3.8 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+      net: '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>'
+    };
+
+    cards.forEach(function (c) {
+      var card = el('div', 'dk');
+      var t = el('div', 'dk-t');
+      t.appendChild(el('span', '', c.label));
+      var ico = el('span', 'dk-ico');
+      ico.setAttribute('style', 'background:' + c.color);
+      ico.innerHTML = DK_ICON[c.icon] || '';
+      t.appendChild(ico);
+      card.appendChild(t);
+
+      var b = el('div', 'dk-b', c.value);
+      card.appendChild(b);
+
+      var f = el('div', 'dk-f');
+      var d = c.delta;
+      var dirClass = d.dir;
+      if (c.inverse && d.dir !== 'flat') dirClass = (dirClass === 'up') ? 'down' : 'up';
+      var arrow = d.dir === 'up' ? '↑' : (d.dir === 'down' ? '↓' : '—');
+      var txt = (d.pct === null) ? '上月无数据' : (arrow + ' ' + (d.pct > 0 ? '+' : '') + d.pct.toFixed(1) + '%');
+      var badge = el('span', 'dk-d ' + dirClass, txt);
+      f.appendChild(badge);
+      f.appendChild(el('span', 'dk-n', c.note));
+      card.appendChild(f);
+
+      box.appendChild(card);
+    });
+  }
+
+  /** 月度趋势：面积折线图（纯手写 SVG），按 state.dashMetric 切换指标 */
+  function renderDashChart() {
+    var box = $('#dashChart');
+    if (!box) return;
+    box.innerHTML = '';
+
+    var rows = statRows();
+    var list = aggregateByMonth(rows).filter(function (o) { return o.month && o.month !== '未填月份'; });
+    list.sort(function (a, b) { return a.month < b.month ? -1 : 1; });
+    // 趋势图看最近 12 个月就够，太长会挤成一条线
+    if (list.length > 12) list = list.slice(list.length - 12);
+
+    if (!list.length) {
+      box.appendChild(el('div', 'dash-empty', '当前口径下还没有可统计的月份'));
+      return;
+    }
+
+    var metric = state.dashMetric || 'count';
+    var getV = function (o) { return num(o[metric]); };
+    var vals = list.map(getV);
+    var max = Math.max.apply(null, vals.concat([1]));
+    var unit = metric === 'count' ? '' : '¥';
+
+    var w = 820, h = 260, padL = 54, padR = 22, padT = 26, padB = 40;
+    var iw = w - padL - padR, ih = h - padT - padB;
+
+    // Y 轴 4 档，取整到「好看」的刻度
+    var step = niceStep(max / 3);
+    var top = step * 3;
+    while (top < max) { step = niceStep(step * 4 / 3); top = step * 3; }
+
+    var svg = svgNode('svg', {
+      viewBox: '0 0 ' + w + ' ' + h, width: '100%', height: 'auto',
+      preserveAspectRatio: 'xMidYMid meet', role: 'img', 'aria-label': '月度趋势'
+    });
+
+    // 横向网格 + Y 轴刻度
+    for (var g = 0; g <= 3; g++) {
+      var gy = padT + ih - (ih * g / 3);
+      svg.appendChild(svgNode('line', {
+        x1: padL, y1: gy, x2: w - padR, y2: gy,
+        stroke: 'rgba(255,255,255,.08)', 'stroke-width': '1'
+      }));
+      var tv = step * g;
+      var tl = svgNode('text', {
+        x: padL - 9, y: gy + 4, 'text-anchor': 'end',
+        'font-size': 11, fill: '#8B95AC'
+      });
+      tl.textContent = unit + fmtAxis(tv);
+      svg.appendChild(tl);
+    }
+
+    var n = list.length;
+    var xAt = function (i) { return n === 1 ? padL + iw / 2 : padL + (iw * i / (n - 1)); };
+    var yAt = function (v) { return padT + ih - (top ? (ih * Math.min(v, top) / top) : 0); };
+
+    // 面积渐变
+    var defs = svgNode('defs', {});
+    var lg = svgNode('linearGradient', { id: 'dashAreaGrad', x1: '0', y1: '0', x2: '0', y2: '1' });
+    lg.appendChild(svgNode('stop', { offset: '0%', 'stop-color': '#4F7BFF', 'stop-opacity': '0.42' }));
+    lg.appendChild(svgNode('stop', { offset: '100%', 'stop-color': '#4F7BFF', 'stop-opacity': '0.02' }));
+    defs.appendChild(lg);
+    svg.appendChild(defs);
+
+    var lineD = '';
+    var areaD = '';
+    list.forEach(function (o, i) {
+      var x = xAt(i), y = yAt(getV(o));
+      lineD += (i ? ' L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+      if (!i) areaD = 'M ' + x.toFixed(1) + ' ' + (padT + ih);
+      areaD += ' L ' + x.toFixed(1) + ' ' + y.toFixed(1);
+      if (i === n - 1) areaD += ' L ' + x.toFixed(1) + ' ' + (padT + ih) + ' Z';
+    });
+    svg.appendChild(svgNode('path', { d: areaD, fill: 'url(#dashAreaGrad)', stroke: 'none' }));
+    svg.appendChild(svgNode('path', {
+      d: lineD, fill: 'none', stroke: '#6B8CFF', 'stroke-width': '2.4',
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+    }));
+    // 虚线：环比参考（把上月值平移过来，视觉上就是「上期水位」）
+    var prevD = '';
+    list.forEach(function (o, i) {
+      var pv = i ? getV(list[i - 1]) : getV(o);
+      var x = xAt(i), y = yAt(pv);
+      prevD += (i ? ' L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+    });
+    svg.appendChild(svgNode('path', {
+      d: prevD, fill: 'none', stroke: '#A78BFA', 'stroke-width': '1.6',
+      'stroke-dasharray': '5 5', opacity: '0.85'
+    }));
+
+    // 数据点 + 月份标签
+    list.forEach(function (o, i) {
+      var x = xAt(i), y = yAt(getV(o));
+      var isLast = i === n - 1;
+      svg.appendChild(svgNode('circle', {
+        cx: x, cy: y, r: isLast ? 4.6 : 3.4,
+        fill: isLast ? '#0F1320' : '#6B8CFF',
+        stroke: '#6B8CFF', 'stroke-width': isLast ? 2.6 : 1.4
+      }));
+      var lab = svgNode('text', {
+        x: x, y: padT + ih + 22, 'text-anchor': 'middle',
+        'font-size': 11, fill: '#8B95AC'
+      });
+      lab.textContent = o.month.slice(5) + '月';
+      svg.appendChild(lab);
+      if (isLast) {
+        var vt = svgNode('text', {
+          x: x, y: y - 12, 'text-anchor': 'end', 'font-size': 12,
+          'font-weight': 700, fill: '#E8ECF5'
+        });
+        vt.textContent = unit + fmtAxis(getV(o));
+        svg.appendChild(vt);
+      }
+    });
+
+    box.appendChild(svg);
+  }
+
+  /** 阶段分布：横向占比条，点条 = 跳到该阶段 */
+  function renderDashStageBars() {
+    var box = $('#dashStageBars');
+    if (!box) return;
+    box.innerHTML = '';
+
+    var rows = statRows();
+    var counts = countByStage(rows);
+    var total = rows.length || 1;
+    var max = 1;
+    STAGES.forEach(function (s) { max = Math.max(max, Number(counts[s.name] || 0)); });
+
+    if (!rows.length) {
+      box.appendChild(el('div', 'dash-empty', '当前口径下还没有订单'));
+      return;
+    }
+
+    STAGES.forEach(function (s) {
+      var v = Number(counts[s.name] || 0);
+      var row = el('div', 'dbar');
+      row.setAttribute('data-dstage', s.name);
+      row.setAttribute('title', s.name + '：' + v + ' 单（占 ' + Math.round(v / total * 100) + '%）· 点击筛选');
+      row.appendChild(el('span', 'dbar-n', s.name));
+      var track = el('div', 'dbar-t');
+      var fill = el('i', 'dbar-f');
+      fill.style.width = Math.round(v / max * 100) + '%';
+      fill.style.background = 'linear-gradient(90deg,#4F7BFF,#A78BFA)';
+      fill.style.opacity = v ? '1' : '0.25';
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(el('span', 'dbar-v', String(v)));
+      box.appendChild(row);
+    });
+  }
+
+  /** 年度汇总：一行一年，点行筛该年；净额 / 扣款各自着色 */
+  function renderDashYearRows() {
+    var box = $('#dashYearRows');
+    if (!box) return;
+    box.innerHTML = '';
+
+    var list = aggregateByYear(statRows()).filter(function (o) { return o.year !== '未填年份'; });
+    if (!list.length) {
+      box.appendChild(el('div', 'dash-empty', '当前口径下还没有可汇总的年份'));
+      return;
+    }
+    // 最新年份排最上面，跟明细表口径一致
+    list.sort(function (a, b) { return a.year < b.year ? 1 : -1; });
+
+    list.forEach(function (o) {
+      var row = el('div', 'drow' + (state.year === o.year ? ' on' : ''));
+      row.setAttribute('data-dyear', o.year);
+      row.setAttribute('title', o.year + ' 年 · 点击只看这一年');
+      row.appendChild(el('span', 'drow-y', o.year + '年'));
+      row.appendChild(dashCell('订单总数', String(o.count), ''));
+      row.appendChild(dashCell('提成', money(o.commission), ''));
+      row.appendChild(dashCell('净额', money(o.net), 'c-net'));
+      box.appendChild(row);
+    });
+  }
+
+  function dashCell(label, value, cls) {
+    var c = el('div', 'dc' + (cls ? ' ' + cls : ''));
+    c.appendChild(el('i', '', label));
+    c.appendChild(el('b', '', value));
+    return c;
+  }
+
+  /** 跟单健康度：逾期 / 今天 / 未来 7 天 */
+  function renderDashHealth() {
+    var box = $('#dashHealth');
+    if (!box) return;
+    box.innerHTML = '';
+
+    var items = todayItems(statRows());
+    var over = items.filter(function (i) { return i.kind === 'over'; }).length;
+    var today = items.filter(function (i) { return i.kind === 'today'; }).length;
+    var soon = items.filter(function (i) { return i.kind === 'soon'; }).length;
+
+    [
+      { cls: 'over', v: over, l: '逾期未跟进', tip: '越早处理越好' },
+      { cls: 'today', v: today, l: '今天该跟进', tip: '今天的活今天干' },
+      { cls: 'week', v: soon, l: '未来 3 天以内', tip: '提前排好时间' }
+    ].forEach(function (o) {
+      var d = el('div', 'dh ' + o.cls);
+      d.appendChild(el('div', 'dh-v', String(o.v)));
+      d.appendChild(el('div', 'dh-l', o.l));
+      d.appendChild(el('div', 'dh-l', o.tip));
+      box.appendChild(d);
+    });
+  }
+
+  /** 大屏统一入口：按固定顺序调度各渲染函数（无环路） */
+  function renderDash() {
+    var sub = $('#dashSub');
+    if (sub) sub.textContent = dashMetaText();
+    renderDashKpis();
+    renderDashChart();
+    renderDashStageBars();
+    renderDashYearRows();
+    renderDashHealth();
+  }
+
+  /** 月份偏移：'YYYY-MM' 加减 n 个月 */
+  function shiftMonth(ym, n) {
+    if (!ym) return '';
+    var y = Number(ym.slice(0, 4)), m = Number(ym.slice(5, 7));
+    var d = new Date(y, m - 1 + n, 1);
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+  }
+  /** 轴刻度取整到 1/2/5/10 的整数倍 */
+  function niceStep(v) {
+    if (!(v > 0)) return 1;
+    var exp = Math.floor(Math.log(v) / Math.LN10);
+    var base = Math.pow(10, exp);
+    var f = v / base;
+    var nice = f <= 1 ? 1 : (f <= 2 ? 2 : (f <= 5 ? 5 : 10));
+    return nice * base;
+  }
+  /** 轴上的数字：超过 1 万折成「x.x万」，省得挤 */
+  function fmtAxis(v) {
+    if (v >= 10000) return (v / 10000).toFixed(v % 10000 === 0 ? 0 : 1) + '万';
+    return String(Math.round(v));
   }
   /** 候选设计师 = 固定名单 ∪ 订单里出现过的人名（去重排序），填单时下拉直接选 */
   /** 「设计师」输入框候选项（整个名单）+「区域销售经理」候选项（订单里出现过的人） */
@@ -3786,10 +4369,10 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       else toast('这条今天没出现在待办里（可能已安装或没填跟进日期）', 2400);
     }, 40);
   }
+  /** 订单卡上的「跳到统计图表」：切到数据统计菜单（统计已独立成页） */
   function gotoStats() {
-    var sec = document.getElementById('statSection') || document.querySelectorAll('main .card')[2];
-    scrollTo(sec);
-    toast('统计口径：' + (state.statScope === 'all' ? '全部数据' : '跟随筛选'));
+    switchView('stats');
+    toast('已切到「数据统计」，口径：' + (state.statScope === 'all' ? '全部数据' : '跟随筛选'));
   }
   function clearSeed() {
     var ids = state.rows.filter(function (r) { return r['示例数据'] === true; }).map(function (r) { return r._id; });
@@ -4213,20 +4796,65 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     });
 
     // 图表柱子 → 跳阶段
-    $('#stageChart').addEventListener('click', function (e) {
+    // 阶段柱状图（原「数据统计」卡片里的图；现在改由大屏的阶段分布承担，这里做兼容保留）
+    if ($('#stageChart')) $('#stageChart').addEventListener('click', function (e) {
       var g = closest(e.target, 'data-stagebar');
       if (!g) return;
       gotoStage(g.getAttribute('data-stagebar'));
     });
 
-    // 统计口径切换
+    // 统计口径切换（大屏与订单页共用同一个 state.statScope）
     $('#statScope').addEventListener('click', function (e) {
       var b = closest(e.target, 'data-scope');
       if (!b) return;
       state.statScope = b.getAttribute('data-scope');
       Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('on', x === b); });
       renderStats();
+      if (state.view === 'stats') renderDash();
     });
+
+    // ---- 页面级菜单：订单跟进 / 数据统计 ----
+    if ($('#pageMenu')) {
+      $('#pageMenu').addEventListener('click', function (e) {
+        var b = closest(e.target, 'data-view');
+        if (b) switchView(b.getAttribute('data-view'));
+      });
+    }
+
+    // 大屏：趋势图指标切换（订单总数 / 净额 / 提成）
+    if ($('#dashMetricTabs')) {
+      $('#dashMetricTabs').addEventListener('click', function (e) {
+        var b = closest(e.target, 'data-metric');
+        if (!b) return;
+        state.dashMetric = b.getAttribute('data-metric');
+        Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('on', x === b); });
+        renderDashChart();
+      });
+    }
+
+    // 大屏：点阶段条 / 点年份行 = 设好筛选并切回订单页
+    if ($('#dashStageBars')) {
+      $('#dashStageBars').addEventListener('click', function (e) {
+        var b = closest(e.target, 'data-dstage');
+        if (!b) return;
+        gotoStage(b.getAttribute('data-dstage'));
+        switchView('orders');
+        toast('已筛出「' + b.getAttribute('data-dstage') + '」的订单');
+      });
+    }
+    if ($('#dashYearRows')) {
+      $('#dashYearRows').addEventListener('click', function (e) {
+        var b = closest(e.target, 'data-dyear');
+        if (!b) return;
+        var y = b.getAttribute('data-dyear');
+        state.year = (state.year === y) ? '' : y;
+        state.focusId = '';
+        if ($('#yearSel')) $('#yearSel').value = state.year;
+        refreshAll();
+        renderDashYearRows();
+        toast(state.year ? ('已筛出 ' + y + ' 年的订单') : '已取消年份筛选');
+      });
+    }
 
     // KPI 卡片快捷筛选
     Array.prototype.forEach.call(document.querySelectorAll('.kpi'), function (k) {
@@ -4305,6 +4933,16 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
       x.classList.toggle('on', x.getAttribute('data-scope') === state.statScope);
     });
   }
+  /**
+   * 页面菜单要吸在顶栏正下方。顶栏在窄屏会换行、高度不固定，
+   * 所以不用写死的 top 值，实测顶栏高度后写到 --top-h 上给 .pagemenu 用。
+   */
+  function syncMenuOffset() {
+    var top = document.querySelector('header.top');
+    if (!top) return;
+    var h = Math.round(top.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty('--top-h', h + 'px');
+  }
 
   /* ---------------- 启动 ---------------- */
   /** 登录成功后才真正拉数据（未登录时一笔订单都不加载） */
@@ -4348,6 +4986,10 @@ body.auth-lock>header.top,body.auth-lock>main,body.auth-lock>footer{display:none
     bindDesignerEvents();
     bindAuthEvents();
     restoreTitle();
+    syncScopeUI();            // 「跟随筛选 / 全部数据」两个按钮的初始高亮
+    switchView('orders');     // 每次打开都先落在「订单跟进」，大屏藏在菜单后面
+    syncMenuOffset();         // 菜单吸顶要贴着顶栏下沿，顶栏多高就往下让多少
+    window.addEventListener('resize', syncMenuOffset);
     bind($('#todayLabel')).textContent = '今天 ' + prettyDate(todayISO()) + ' · 数据加载中…';
     setSync(HAS_DB ? 'syncing' : 'local');
     renderOfflineBar();   // 离线（本地文件 / 本地预览）时，登录页直接给出线上地址
