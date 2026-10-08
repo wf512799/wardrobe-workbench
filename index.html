@@ -3837,7 +3837,7 @@ footer,
       'stroke-dasharray': '5 5', opacity: '0.85'
     }));
 
-    // 数据点 + 月份标签
+    // 数据点 + 月份标签 + 数值标签（每个点都标数，不用对着 Y 轴估算）
     list.forEach(function (o, i) {
       var x = xAt(i), y = yAt(getV(o));
       var isLast = i === n - 1;
@@ -3852,14 +3852,18 @@ footer,
       });
       lab.textContent = o.month.slice(5) + '月';
       svg.appendChild(lab);
-      if (isLast) {
-        var vt = svgNode('text', {
-          x: x, y: y - 12, 'text-anchor': 'end', 'font-size': 12,
-          'font-weight': 700, fill: '#E8ECF5'
-        });
-        vt.textContent = unit + fmtAxis(getV(o));
-        svg.appendChild(vt);
-      }
+      // 数值标签：居中贴在点上方；描边打底（paint-order:stroke），
+      // 这样标签压在折线 / 面积 / 环比虚线上也照样读得清。
+      var vt = svgNode('text', {
+        x: x, y: y - 11, 'text-anchor': 'middle',
+        'font-size': isLast ? 12 : 11.5,
+        'font-weight': isLast ? 700 : 600,
+        fill: isLast ? '#E8ECF5' : '#C7D0E4',
+        stroke: '#0F1320', 'stroke-width': 3, 'paint-order': 'stroke',
+        'stroke-linejoin': 'round', 'data-vlab': '1'
+      });
+      vt.textContent = unit + fmtAxis(getV(o));
+      svg.appendChild(vt);
     });
 
     box.appendChild(svg);
