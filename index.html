@@ -4834,11 +4834,21 @@ footer,
     }
     $('#mask').classList.add('on');
     $('#sheet').classList.add('on');
+    resetSaveBtn();   // 不管上一次保存是成功还是失败，每次打开都从「可点」起步
   }
   function closeSheet() {
     $('#mask').classList.remove('on');
     $('#sheet').classList.remove('on');
     state.editId = '';
+  }
+  /** 把保存按钮复位成「可点」。
+      必须成功、失败两条路都复位：#sheet 是常驻节点（不是每次重建），
+      保存成功后只关弹窗、不复位的话，下一次打开弹窗看到的还是那个
+      灰着的「保存中…」按钮 —— 表现就是「再也保存不了」。
+      收尾统一走这里，别再手写 btn.disabled / btn.textContent。 */
+  function resetSaveBtn() {
+    var b = $('#btnSave');
+    if (b) { b.disabled = false; b.textContent = '保存'; }
   }
   function submitForm() {
     var btn = $('#btnSave');
@@ -4886,6 +4896,9 @@ footer,
     var editId = state.editId;
     saveRecord(props, state.editId)
       .then(function (newId) {
+        // 成功也要复位按钮：弹窗虽然关了，但按钮节点还在，
+        // 不复位下一次打开就是「保存中…」+ 灰着点不动（本条 bug 的真身）
+        resetSaveBtn();
         var rid = wasEdit ? editId : newId;
         clearDraft(); closeSheet();
         var sid = st || '';
@@ -4908,7 +4921,7 @@ footer,
         loadData().then(function () { rid && flashRow(rid); });
       })
       .catch(function (err) {
-        btn.disabled = false; btn.textContent = '保存';
+        resetSaveBtn();
         // 会话过期（登录超过 12 小时）：别把锅甩给「网络 / 没登录资料库」，
         // 直说是登录过期，并把表单留住、引导重登，登成功自动把这次保存补上。
         var keepOn = USE_CLOUD_FN && isSessionExpired(err);
