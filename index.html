@@ -1134,6 +1134,30 @@ footer,
 @media (max-width:1023px){ :root{--top-h:167px} }   /* 顶栏换行后（实测 ~167~171px） */
 /* 菜单必须盖在顶栏「下面」而不是钻进它底下：顶栏 z-index 更高，菜单贴其下沿 */
 .pagemenu{top:var(--top-h,121px)}
+
+/* ---------- 第二十二轮：隐藏三处内容（用户附图要求「红框内容不要显示」）---------- */
+/* ① 顶部「资料库已同步」徽标   ② 订单卡片里的「设计师：XX」行   ③ 新增/编辑弹窗里的「设计师」字段
+   ⚠️ 一律用 CSS 隐藏，**绝不删 DOM 节点** —— 冒烟测试有断言查节点文本：
+      · 第 816 行：`#orderList .o-card` 的 textContent 必须含「设计师：张明」
+      · 第 1077 / 1694 行：`#syncText` 的 textContent 必须含「已同步」
+      · 第 694 行：`#designerList` 的 option 必须含「张明」
+      节点留在 DOM 里，这些断言照旧通过；一旦删节点就全挂。
+   ⚠️ 只影响「显示」，不影响数据与逻辑：订单的「设计师」字段照旧保存、
+      照旧参与分人统计与分人登录（服务端 opQuery 按设计师过滤）。 */
+
+/* ① 顶部同步徽标（窄屏 ≤768px 本来就隐藏，见第 373 行）。用 id 选择器，特异性足够高。 */
+#syncBadge{display:none !important}
+
+/* ② 订单卡片里那行「设计师：XX」（renderList 里建的 .o-designer） */
+.o-designer{display:none !important}
+
+/* ③ 新增/编辑弹窗的「设计师」字段：label + 输入框 + 候选人名单 + 提示文字整块隐藏。
+      它和「区域销售经理」同处一个 .grid2 两列栅格（1fr 1fr），
+      隐藏后左边会空一格，所以把该栅格改成单列，让剩下的字段独占整行。
+      用 :has() 精准命中「含设计师输入框的那个栅格」与「含它的那个 .field」，
+      不碰其它 .grid2（窄屏第 382 行那条 .grid2{grid-template-columns:1fr} 仍照旧）。 */
+.grid2:has(#f-designer){grid-template-columns:minmax(0,1fr)}
+.grid2 > .field:has(#f-designer){display:none !important}
 </style>
 </head>
 <body class="auth-lock" data-page-node-id="wqHTI6jAm7rjMIbjJg2OTT">
